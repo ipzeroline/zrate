@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-void: #090615;
+  --bg-deep: #120b26;
+  --bg-panel: #17102e;
+  --bg-card: #161329;
+  --neon-cyan: #6ee7ff;
+  --neon-pink: #b86cff;
+  --neon-yellow: #fff26a;
+  --neon-green: #5dffb2;
+  --neon-purple: #8b5cf6;
+  --grid-color: rgba(110, 231, 255, 0.035);
+  --border-glow: rgba(184, 108, 255, 0.26);
+  --text-primary: #f8fbff;
+  --text-secondary: rgba(235, 241, 255, 0.72);
+  --text-dim: rgba(212, 222, 255, 0.48);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  font-family: 'Rajdhani', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.14) 0%, transparent 58%),
+              radial-gradient(ellipse at 92% 82%, rgba(93, 255, 178, 0.055) 0%, transparent 46%),
+              radial-gradient(ellipse at 8% 92%, rgba(110, 231, 255, 0.055) 0%, transparent 48%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-void);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan);
+  box-shadow: 0 0 6px var(--neon-cyan);
+}
+
+::selection {
+  background: rgba(255, 242, 106, 0.24);
+  color: var(--text-primary);
+}
