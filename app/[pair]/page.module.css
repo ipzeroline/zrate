@@ -1,0 +1,326 @@
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(39, 231, 255, 0.16);
+  padding-bottom: 14px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.homeLink {
+  color: var(--neon-cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.pairMenu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  border: 1px solid rgba(39, 231, 255, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(39, 231, 255, 0.08), transparent 18%, transparent 82%, rgba(255, 79, 216, 0.08)),
+    rgba(8, 21, 36, 0.58);
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.pairMenuLabel {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  color: var(--neon-green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.86rem;
+  white-space: nowrap;
+  padding-right: 4px;
+  background: rgba(8, 21, 36, 0.94);
+}
+
+.pairTickerViewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
+}
+
+.hero {
+  padding: 26px 0 18px;
+}
+
+.eyebrow {
+  color: var(--neon-green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.hero h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.06;
+  color: var(--text-primary);
+  letter-spacing: 0;
+  max-width: 980px;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 760px;
+  margin-top: 14px;
+  color: var(--text-secondary);
+  font-size: 1.18rem;
+  line-height: 1.65;
+}
+
+.ratePanel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+  gap: 14px;
+  margin: 8px 0 22px;
+  padding: 20px;
+  border: 1px solid rgba(77, 255, 154, 0.22);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(77, 255, 154, 0.09), transparent 38%),
+    rgba(8, 21, 36, 0.78);
+}
+
+.rateDate {
+  color: var(--neon-green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.ratePanel h2 {
+  color: var(--text-primary);
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.55rem, 3vw, 2.5rem);
+  line-height: 1.16;
+  margin-bottom: 10px;
+}
+
+.ratePanel p {
+  color: var(--text-secondary);
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.exampleCard {
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid rgba(39, 231, 255, 0.16);
+  border-radius: 6px;
+  background: rgba(5, 7, 17, 0.52);
+}
+
+.exampleFrom,
+.exampleEquals {
+  color: var(--text-dim);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.84rem;
+}
+
+.exampleCard strong {
+  color: var(--neon-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 28px;
+}
+
+.summaryCard,
+.contentCard,
+.related {
+  border: 1px solid rgba(39, 231, 255, 0.18);
+  background: rgba(8, 21, 36, 0.72);
+  border-radius: 8px;
+}
+
+.summaryCard {
+  padding: 16px;
+}
+
+.summaryLabel {
+  color: var(--text-dim);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.summaryValue {
+  display: block;
+  color: var(--text-primary);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.28rem;
+  margin-top: 6px;
+}
+
+.langGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.contentCard {
+  padding: 20px;
+}
+
+.contentCard h2 {
+  color: var(--neon-cyan);
+  font-size: 1.42rem;
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.contentCard p {
+  color: var(--text-secondary);
+  font-size: 1.04rem;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.contentCard ul {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  padding-left: 20px;
+}
+
+.related {
+  margin-top: 22px;
+  padding: 18px;
+}
+
+.related h2 {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+}
+
+.relatedLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pairMenu .relatedLinks {
+  flex-wrap: nowrap;
+  min-width: max-content;
+  animation: pairFlow 38s linear infinite;
+  will-change: transform;
+}
+
+.pairMenu:hover .relatedLinks {
+  animation-play-state: paused;
+}
+
+.relatedLinks a {
+  border: 1px solid rgba(39, 231, 255, 0.2);
+  border-radius: 999px;
+  color: var(--neon-cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.86rem;
+  padding: 7px 10px;
+  text-decoration: none;
+}
+
+@keyframes pairFlow {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 4px)); }
+}
+
+.relatedLinks a:hover,
+.activePair {
+  border-color: rgba(77, 255, 154, 0.5) !important;
+  background: rgba(77, 255, 154, 0.08);
+  color: var(--neon-green) !important;
+}
+
+@media (max-width: 720px) {
+  .nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pairMenu {
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .pairMenuLabel {
+    font-size: 0.78rem;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ratePanel {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pairMenu .relatedLinks {
+    animation: none;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .exampleGrid {
+    grid-template-columns: 1fr;
+  }
+}

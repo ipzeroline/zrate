@@ -1,20 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-void: #090615;
-  --bg-deep: #120b26;
-  --bg-panel: #17102e;
-  --bg-card: #161329;
-  --neon-cyan: #6ee7ff;
-  --neon-pink: #b86cff;
-  --neon-yellow: #fff26a;
-  --neon-green: #5dffb2;
-  --neon-purple: #8b5cf6;
-  --grid-color: rgba(110, 231, 255, 0.035);
-  --border-glow: rgba(184, 108, 255, 0.26);
-  --text-primary: #f8fbff;
-  --text-secondary: rgba(235, 241, 255, 0.72);
-  --text-dim: rgba(212, 222, 255, 0.48);
+  --bg-void: #050711;
+  --bg-deep: #081524;
+  --bg-panel: #0b1f30;
+  --bg-card: #0d1929;
+  --neon-cyan: #27e7ff;
+  --neon-pink: #ff4fd8;
+  --neon-yellow: #f8f46d;
+  --neon-green: #4dff9a;
+  --neon-purple: #9b6dff;
+  --neon-orange: #ffb84d;
+  --grid-color: rgba(39, 231, 255, 0.04);
+  --border-glow: rgba(39, 231, 255, 0.22);
+  --text-primary: #f4fbff;
+  --text-secondary: rgba(222, 239, 255, 0.76);
+  --text-dim: rgba(191, 215, 235, 0.52);
 }
 
 * {
@@ -34,6 +35,8 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   background-image:
+    linear-gradient(135deg, rgba(255, 79, 216, 0.08), transparent 32%),
+    linear-gradient(315deg, rgba(77, 255, 154, 0.055), transparent 34%),
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 40px 40px;
@@ -43,9 +46,11 @@ body::before {
   content: '';
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.14) 0%, transparent 58%),
-              radial-gradient(ellipse at 92% 82%, rgba(93, 255, 178, 0.055) 0%, transparent 46%),
-              radial-gradient(ellipse at 8% 92%, rgba(110, 231, 255, 0.055) 0%, transparent 48%);
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(39, 231, 255, 0.16) 0%, transparent 48%),
+    radial-gradient(ellipse at 9% 16%, rgba(255, 79, 216, 0.09) 0%, transparent 34%),
+    radial-gradient(ellipse at 92% 78%, rgba(77, 255, 154, 0.07) 0%, transparent 42%),
+    linear-gradient(180deg, transparent 0%, rgba(5, 7, 17, 0.72) 68%, rgba(5, 7, 17, 0.96) 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -62,6 +67,6 @@ body::before {
 }
 
 ::selection {
-  background: rgba(255, 242, 106, 0.24);
+  background: rgba(255, 79, 216, 0.3);
   color: var(--text-primary);
 }
