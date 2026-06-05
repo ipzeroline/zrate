@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { NativeBannerAd, ResponsiveBannerAd } from './components/AdsterraAds'
 import styles from './page.module.css'
 
 const CURRENCY_INFO: Record<string, { flag: string; name: string; symbol: string }> = {
@@ -308,6 +309,8 @@ export default function Home() {
         </div>
       </nav>
 
+      <ResponsiveBannerAd />
+
       {/* Converter Section */}
       <section className={styles.converterSection}>
         <div className={styles.converterPanel}>
@@ -434,6 +437,8 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <NativeBannerAd />
 
       <section className={styles.seoSection} aria-labelledby="exchange-info-heading">
         <div className={styles.seoIntro}>

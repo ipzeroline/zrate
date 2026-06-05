@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { NativeBannerAd, ResponsiveBannerAd } from '../components/AdsterraAds'
 import styles from './page.module.css'
 
 type CurrencyCode = 'USD' | 'EUR' | 'USDT' | 'THB' | 'LAK' | 'MMK' | 'KHR' | 'JPY' | 'CNY' | 'SGD' | 'KRW'
@@ -263,6 +264,8 @@ export default function PairPage({ params }: { params: { pair: string } }) {
         </div>
       </nav>
 
+      <ResponsiveBannerAd />
+
       <section className={styles.hero}>
         <p className={styles.eyebrow}>อัตราแลกเปลี่ยนวันนี้ • {params.pair.toUpperCase()}</p>
         <h1>{thaiTitle}</h1>
@@ -309,6 +312,8 @@ export default function PairPage({ params }: { params: { pair: string } }) {
           <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.quote].th}</span>
         </div>
       </section>
+
+      <NativeBannerAd />
 
       <section className={styles.langGrid} aria-label="SEO content in five languages">
         {(['th', 'en', 'lo', 'my', 'km'] as LanguageCode[]).map(lang => {
