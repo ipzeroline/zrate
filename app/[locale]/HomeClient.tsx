@@ -3,8 +3,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { NativeBannerAd, ResponsiveBannerAd } from './components/AdsterraAds'
-import styles from './page.module.css'
+import { NativeBannerAd, ResponsiveBannerAd } from '../components/AdsterraAds'
+import { Footer } from '../components/Footer'
+import { SeoNav } from '../components/SeoNav'
+import styles from '../page.module.css'
 
 const CURRENCY_INFO: Record<string, { flag: string; name: string; symbol: string }> = {
   USD: { flag: '\u{1F1FA}\u{1F1F8}', name: 'US Dollar', symbol: '$' },
@@ -14,7 +16,7 @@ const CURRENCY_INFO: Record<string, { flag: string; name: string; symbol: string
   THB: { flag: '\u{1F1F9}\u{1F1ED}', name: 'Thai Baht', symbol: '฿' },
   LAK: { flag: '\u{1F1F1}\u{1F1E6}', name: 'Lao Kip', symbol: '₭' },
   MMK: { flag: '\u{1F1F2}\u{1F1F2}', name: 'Myanmar Kyat', symbol: 'K' },
-  KHR: { flag: '\u{1F1F0}\u{1F1ED}', name: 'Cambodian Riel', symbol: '៛' },
+  KHR: { flag: '\u{1F100}\u{1F1ED}', name: 'Cambodian Riel', symbol: '៛' }, // Standard flag format: \u{1F1F0}\u{1F1ED}
   CNY: { flag: '\u{1F1E8}\u{1F1F3}', name: 'Chinese Yuan', symbol: '¥' },
   KRW: { flag: '\u{1F1F0}\u{1F1F7}', name: 'Korean Won', symbol: '₩' },
   SGD: { flag: '\u{1F1F8}\u{1F1EC}', name: 'Singapore Dollar', symbol: 'S$' },
@@ -49,10 +51,14 @@ const CURRENCY_INFO: Record<string, { flag: string; name: string; symbol: string
   USDT: { flag: '₮', name: 'Tether USD', symbol: '₮' },
 }
 
+// Fix KHR flag representation
+CURRENCY_INFO.KHR = { flag: '\u{1F1F0}\u{1F1ED}', name: 'Cambodian Riel', symbol: '៛' }
+
 type Rates = Record<string, number>
-type LanguageCode = 'th' | 'en' | 'la' | 'my' | 'kh'
+type LanguageCode = 'th' | 'en' | 'lo' | 'my' | 'km'
 const LANGUAGE_STORAGE_KEY = 'zrate-language'
-type LocalizedContent = {
+
+interface LocalizedContent {
   usdtName: string
   heroEyebrow: string
   heroHeading: string
@@ -91,9 +97,9 @@ type LocalizedContent = {
 const LANGUAGE_OPTIONS: Array<{ code: LanguageCode; label: string; native: string; flag: string; currency: string; locale: string }> = [
   { code: 'th', label: 'ไทย', native: 'ไทย', flag: '\u{1F1F9}\u{1F1ED}', currency: 'THB', locale: 'th-TH' },
   { code: 'en', label: 'English', native: 'English', flag: '\u{1F1FA}\u{1F1F8}', currency: 'USD', locale: 'en-US' },
-  { code: 'la', label: 'ລາວ', native: 'ລາວ', flag: '\u{1F1F1}\u{1F1E6}', currency: 'LAK', locale: 'lo-LA' },
+  { code: 'lo', label: 'ລາວ', native: 'ລາວ', flag: '\u{1F1F1}\u{1F1E6}', currency: 'LAK', locale: 'lo-LA' },
   { code: 'my', label: 'မြန်မာ', native: 'မြန်မာ', flag: '\u{1F1F2}\u{1F1F2}', currency: 'MMK', locale: 'my-MM' },
-  { code: 'kh', label: 'ខ្មែរ', native: 'ខ្មែរ', flag: '\u{1F1F0}\u{1F1ED}', currency: 'KHR', locale: 'km-KH' },
+  { code: 'km', label: 'ខ្មែរ', native: 'ខ្មែរ', flag: '\u{1F1F0}\u{1F1ED}', currency: 'KHR', locale: 'km-KH' },
 ]
 
 const UI_TEXT: Record<LanguageCode, {
@@ -115,26 +121,24 @@ const UI_TEXT: Record<LanguageCode, {
   addFavorite: string
   removeFavorite: string
   loading: string
-  footerData: string
-  footerSync: string
   error: string
   seoHeading: string
   seoIntro: string
   seoCards: Array<{ title: string; body: string }>
 }> = {
-  th: { heroTitle: 'อัตราแลกเปลี่ยนวันนี้ | zrate.io', heroDescription: 'เช็กค่าเงินและแปลงสกุลเงินแบบเรียลไทม์สำหรับเงินบาท ดอลลาร์ USDT และสกุลเงินยอดนิยมทั่วโลก', subtitle: 'เมทริกซ์อัตราแลกเปลี่ยนแบบเรียลไทม์', baseCurrency: 'สกุลเงินหลัก', amount: 'จำนวนเงิน', from: 'จากสกุลเงิน', language: 'ภาษา', searchPlaceholder: 'ค้นหาสกุลเงิน / รหัส...', currencies: 'สกุลเงิน', syncing: 'กำลังซิงก์...', offline: 'โหมดออฟไลน์', live: 'ข้อมูลสด', crypto: 'คริปโต', active: 'ใช้งานอยู่', setBase: 'ตั้งเป็นสกุลหลัก', addFavorite: 'เพิ่มรายการโปรด', removeFavorite: 'ลบจากรายการโปรด', loading: 'กำลังเชื่อมต่อข้อมูลอัตราแลกเปลี่ยน...', footerData: 'ข้อมูล: EXCHANGERATE-API', footerSync: 'ซิงก์อัตโนมัติ: 60 วินาที', error: 'สัญญาณขาดหาย — ใช้ข้อมูลสำรอง', seoHeading: 'เครื่องมือแปลงค่าเงินออนไลน์สำหรับทุกวัน', seoIntro: 'zrate.io ช่วยให้ดูอัตราแลกเปลี่ยนล่าสุด เปรียบเทียบหลายสกุลเงิน และคำนวณยอดเงินได้รวดเร็วในหน้าเดียว', seoCards: [{ title: 'อัตราแลกเปลี่ยนสด', body: 'อัปเดตค่าเงินจากแหล่งข้อมูลออนไลน์ พร้อมข้อมูลสำรองเมื่อสัญญาณขาดหาย' }, { title: 'รองรับหลายสกุลเงิน', body: 'เช็ก THB, USD, EUR, JPY, LAK, MMK, KHR, CNY และ USDT ได้สะดวก' }, { title: 'ใช้งานง่ายทุกภาษา', body: 'รองรับภาษาไทย อังกฤษ ลาว เมียนมา และกัมพูชา เพื่อการใช้งานในภูมิภาค' }] },
-  en: { heroTitle: 'Live exchange rates today | zrate.io', heroDescription: 'Check exchange rates and convert THB, USD, USDT and major world currencies in real time.', subtitle: 'Real-time currency exchange matrix', baseCurrency: 'Base currency', amount: 'Amount', from: 'From', language: 'Language', searchPlaceholder: 'Search currency / code...', currencies: 'currencies', syncing: 'Syncing...', offline: 'Offline mode', live: 'Live feed', crypto: 'Crypto', active: 'Active', setBase: 'Set base', addFavorite: 'Add to favorites', removeFavorite: 'Remove from favorites', loading: 'Connecting to exchange nodes...', footerData: 'Data: EXCHANGERATE-API', footerSync: 'Auto-sync: 60s', error: 'Signal lost — using cached data', seoHeading: 'Fast online currency converter', seoIntro: 'zrate.io makes it easy to compare exchange rates, calculate conversions, and track popular currencies from one clean page.', seoCards: [{ title: 'Live exchange rates', body: 'Rates refresh from online data with cached fallback when the connection is unavailable.' }, { title: 'Major currencies and USDT', body: 'Follow THB, USD, EUR, JPY, LAK, MMK, KHR, CNY, USDT and more.' }, { title: 'Regional language support', body: 'Use the converter in Thai, English, Lao, Myanmar and Khmer for everyday exchange needs.' }] },
-  la: { heroTitle: 'ອັດຕາການດປ່ຽນເງິນມື້ນີ້ | zrate.io', heroDescription: 'ກວດເບິ່ງຄົ່າເງິນ ແລະ ແປງສະກຸນເງິນ THB, USD, USDT ແລະສະກຸນຫຼັກແບບສົດ.', subtitle: 'ຕາຕະລາງອັດຕາແລກປ່ຽນແບບສົດ', baseCurrency: 'ສະກຸນເງິນຫຼັກ', amount: 'ຈຳນວນເງິນ', from: 'ຈາກສະກຸນເງິນ', language: 'ພາສາ', searchPlaceholder: 'ຄົ້ນຫາສະກຸນເງິນ / ລະຫັສ...', currencies: 'ສະກຸນເງິນ', syncing: 'ກຳລັງຊິງກ໌...', offline: 'ໂໄມດອອບລາຍ', live: 'ຂໍ້ມูນສົດ', crypto: 'ຄຣິບໂຕ', active: 'ກຳລັງໃຊ້', setBase: 'ຕັ້ງເປັນສະກຸນຫຼັກ', addFavorite: 'ເພີ່ມລາຍການມັກ', removeFavorite: 'ລຶບອອກຈາກລາຍການມັກ', loading: 'ກຳລັງເຊື່ອມຕໍ່ຂໍ້ມูນແລກປ່ຽນ...', footerData: 'ຂໍ້ມูນ: EXCHANGERATE-API', footerSync: 'ຊິງກ໌ອັຕໂນມັດ: 60 ວິນາທີ', error: 'ສັນຍານຂາດ — ໃຊ້ຂໍ້ມูນສຳຮອງ', seoHeading: 'ເຄື່ອງມືແປງຄົ່າເງິນອອນລາຍ', seoIntro: 'zrate.io ຊ່ວຍໃຫ້ເບິ່ງອັດຕາລ່າສຸດ ປຽບທຽບຫຼາຍສະກຸນ ແລະຄຳນວນໄດ້ໄວ.', seoCards: [{ title: 'ອັດຕາແບບສົດ', body: 'ອັບເດດຄົ່າເງິນຈາກຂໍ້ມูນອອນລາຍ ພ້ອມຂໍ້ມูນສຳຮອງ.' }, { title: 'ຮອງຮັບຫຼາຍສະກຸນ', body: 'ເບິ່ງ THB, USD, EUR, JPY, LAK, MMK, KHR, CNY ແລະ USDT.' }, { title: 'ພາສາໃນພາກພື້ນ', body: 'ໃຊ້ໄດ້ທັ້ງພາສາລາວ ໄທ ອັງກິດ ມຽນມາ ແລະຂະແມ.' }] },
-  my: { heroTitle: 'ယနေ့ ငွေလဲနှူန်းများ | zrate.io', heroDescription: 'THB, USD, USDT နှင့် နာမည်ကြီး ငွေကြေးများကို အချိန်နှင့်တပြေးညီး စစ်ဆေးပြီး ပြောင်းလဲတွ်ချက်ပါၠ', subtitle: 'အချိန်နှင့်တပြေးညီး ငွေလဲနှူန်းမက်ထရစ်', baseCurrency: 'အခြေခံငွေကြေး', amount: 'ပမာဏ', from: 'မှ', language: 'ဘာသာစကား', searchPlaceholder: 'ငွေကြေး / ကုဒ် ရှာရန်...', currencies: 'ငွေကြေးများ', syncing: 'စင့်ခ်လုပ်နေသည်...', offline: 'အော့ဖ်လိုင်းမုဒ်', live: 'တိုက်ရိုက်ဒေတာ', crypto: 'ခရစ်ပတို', active: 'အသုံးပြုနေသည်', setBase: 'အခြေခံငွေကြေးထားရန်', addFavorite: 'စိတ်ကြိုက်ထဲထည့်ရန်', removeFavorite: 'စိတ်ကြိုက်မှဖယ်ရန်', loading: 'ငွေလဲဒေတာ ချိတ်ဆက်နေသည်...', footerData: 'ဒေတာ: EXCHANGERATE-API', footerSync: 'အလိုအလျော်စင့်ခ်: 60 စက္ကန့်', error: 'ချိတ်ဆက်မှုပြတ်တောက် — သိမ်းထားသောဒေတာသုံးနေသည်', seoHeading: 'လွယ်ကြူသော အွန်လိုင်း ငွေကြေးပြောင်းစက်', seoIntro: 'zrate.io ဖြင့် ငွေလဲနှူန်းများကို နှှိုင်းယှဥ်ကြည့်ရှုပြီး တစ်နေရာတည်းတွင် မြန်မြန်တွက်ချက်နိုင်ပါသည်။', seoCards: [{ title: 'တိုက်ရိုက် ငွေလဲနှူန်း', body: 'အွန်လိုင်းဒေတာမှ အချိန်နှင့်တပြေးညီး အပ်ဒိတ်လုပ်ပြီး ချိတ်ဆက်မှုပြတ်လျှင် သိမ်းထားသောဒေတာကိုသုံးသည်။' }, { title: 'ငွေကြေးများစွာ', body: 'THB, USD, EUR, JPY, LAK, MMK, KHR, CNY နှင့် USDT ကို စစ်ဆေးနိုင်သည်။' }, { title: 'ဒေသသုံး ဘာသာစကား', body: 'မြန်မာ၊ ထိုင်း၊ အင်္ဂလိပ်၊ လာအို နှင့် ခမာ ဘာသာများကို အသုံးပြုနိုင်သည်။' }] },
-  kh: { heroTitle: 'អត្រាប្តូរប្រាស់ថ្ងៃនេះ | zrate.io', heroDescription: 'ពិនិត្យ និងបម្លែរ THB, USD, USDT និងរូបិយ័បណ្ធពេញនិយមជាច្រើនតាមពេលវេលាពិត្ត់។', subtitle: 'ម៉ាទ្រីសអត្រាប្តូរប្រាស់ពេលវេលាពិត្ត់', baseCurrency: 'រូបិយ័បណ្ធគោល', amount: 'ចំនួនប្រាស់', from: 'ពីរូបិយ័បណ្ធ', language: 'ភាសា', searchPlaceholder: 'ស្វែងរករូបិយ័បណ្ធ / កូដ...', currencies: 'រូបិយ័បណ្ធ', syncing: 'កំពុងធ្វើសមកាលកម្ម...', offline: 'របៀបក្រៅបណ្ដាញ', live: 'ទិន្នន័យផ្ទាល់', crypto: 'គ្រីបតូ', active: 'កំពុងប្រើ', setBase: 'កំណត់ជាគោល', addFavorite: 'បន្ថែមទៅចំណូលចិត្ត', removeFavorite: 'ដកចេញពីចំណូលចិត្ត', loading: 'កំពុងភ្ជាប់ទិន្នន័យអត្រាប្តូរ...', footerData: 'ទិន្នន័យ: EXCHANGERATE-API', footerSync: 'សមកាលកម្មស្វ័យប្រវត្តិ: 60 វិនាទី', error: 'បាត់សញ្ញា — ប្រើទិន្នន័យបម្រុន', seoHeading: 'ឧបករណ៍បម្លែររូបិយ័បណ្ធអនឡាញ', seoIntro: 'zrate.io ជួយប្រៀបធ្នាប់អត្រាប្តូរប្រាស់ គណនាចំនួនប្រាស់ និងតាមដានរូបិយ័បណ្ធសំខាន់ំនុងក្នុងទំព័រតែមួយ។', seoCards: [{ title: 'អត្រាប្តូរប្រាស់ផ្ទាល់', body: 'ធ្វើបច្បប្រឹនភាពពីទិន្នន័យអនឡាញ និងមានទិន្នន័យបម្រុនពេលបាត់ការតភ្ជាប់។' }, { title: 'គាំទ្ររូបិយ័បណ្ធច្រើន', body: 'ពិនិត្យ THB, USD, EUR, JPY, LAK, MMK, KHR, CNY និង USDT បានងាយស្រួល។' }, { title: 'ភាសាក្នុងតំបន់', body: 'ប្រើបានជាភាសាខ្មែរ ថៃ អង់គ្លេស ឡាវ និងមីយ៉ាន្ម៉ា។' }] },
+  th: { heroTitle: 'อัตราแลกเปลี่ยนวันนี้ | zrate.io', heroDescription: 'เช็กค่าเงินและแปลงสกุลเงินแบบเรียลไทม์สำหรับเงินบาท ดอลลาร์ USDT และสกุลเงินยอดนิยมทั่วโลก', subtitle: 'เมทริกซ์อัตราแลกเปลี่ยนแบบเรียลไทม์', baseCurrency: 'สกุลเงินหลัก', amount: 'จำนวนเงิน', from: 'จากสกุลเงิน', language: 'ภาษา', searchPlaceholder: 'ค้นหาสกุลเงิน / รหัส...', currencies: 'สกุลเงิน', syncing: 'กำลังซิงก์...', offline: 'โหมดออฟไลน์', live: 'ข้อมูลสด', crypto: 'คริปโต', active: 'ใช้งานอยู่', setBase: 'ตั้งเป็นสกุลหลัก', addFavorite: 'เพิ่มรายการโปรด', removeFavorite: 'ลบจากรายการโปรด', loading: 'กำลังเชื่อมต่อข้อมูลอัตราแลกเปลี่ยน...', error: 'สัญญาณขาดหาย — ใช้ข้อมูลสำรอง', seoHeading: 'เครื่องมือแปลงค่าเงินออนไลน์สำหรับทุกวัน', seoIntro: 'zrate.io ช่วยให้ดูอัตราแลกเปลี่ยนล่าสุด เปรียบเทียบหลายสกุลเงิน และคำนวณยอดเงินได้รวดเร็วในหน้าเดียว', seoCards: [{ title: 'อัตราแลกเปลี่ยนสด', body: 'อัปเดตค่าเงินจากแหล่งข้อมูลออนไลน์ พร้อมข้อมูลสำรองเมื่อสัญญาณขาดหาย' }, { title: 'รองรับหลายสกุลเงิน', body: 'เช็ก THB, USD, EUR, JPY, LAK, MMK, KHR, CNY และ USDT ได้สะดวก' }, { title: 'ใช้งานง่ายทุกภาษา', body: 'รองรับภาษาไทย อังกฤษ ลาว เมียนมา และกัมพูชา เพื่อการใช้งานในภูมิภาค' }] },
+  en: { heroTitle: 'Live exchange rates today | zrate.io', heroDescription: 'Check exchange rates and convert THB, USD, USDT and major world currencies in real time.', subtitle: 'Real-time currency exchange matrix', baseCurrency: 'Base currency', amount: 'Amount', from: 'From', language: 'Language', searchPlaceholder: 'Search currency / code...', currencies: 'currencies', syncing: 'Syncing...', offline: 'Offline mode', live: 'Live feed', crypto: 'Crypto', active: 'Active', setBase: 'Set base', addFavorite: 'Add to favorites', removeFavorite: 'Remove from favorites', loading: 'Connecting to exchange nodes...', error: 'Signal lost — using cached data', seoHeading: 'Fast online currency converter', seoIntro: 'zrate.io makes it easy to compare exchange rates, calculate conversions, and track popular currencies from one clean page.', seoCards: [{ title: 'Live exchange rates', body: 'Rates refresh from online data with cached fallback when the connection is unavailable.' }, { title: 'Major currencies and USDT', body: 'Follow THB, USD, EUR, JPY, LAK, MMK, KHR, CNY, USDT and more.' }, { title: 'Regional language support', body: 'Use the converter in Thai, English, Lao, Myanmar and Khmer for everyday exchange needs.' }] },
+  lo: { heroTitle: 'ອັດຕາການດປ່ຽນເງິນມື້ນີ້ | zrate.io', heroDescription: 'ກວດເບິ່ງຄົ່າເງິນ ແລະ ແປງສະກຸນເງິນ THB, USD, USDT ແລະສະກຸນຫຼັກແບບສົດ.', subtitle: 'ຕາຕະລາງອັດຕາແລກປ່ຽນແບບສົດ', baseCurrency: 'ສະກຸນເງິນຫຼັກ', amount: 'ຈຳນວນເງິນ', from: 'ຈາກສະກຸນເງິນ', language: 'ພາສາ', searchPlaceholder: 'ຄົ້ນຫາສະກຸນເງິນ / ລະຫັສ...', currencies: 'ສະກຸນເງິນ', syncing: 'ກຳລັງຊິງກ໌...', offline: 'ໂໄມດອອບລາຍ', live: 'ຂໍ້ມູ້ນສົດ', crypto: 'ຄຣິບໂຕ', active: 'ກຳລັງໃຊ້', setBase: 'ຕັ້ງເປັນສະກຸນຫຼັກ', addFavorite: 'ເພີ່ມລາຍການມັກ', removeFavorite: 'ລຶບອອກຈາກລາຍການມັກ', loading: 'ກຳລັງເຊື່ອມຕໍ່ຂໍ້ມູ້ນແລກປ່ຽນ...', error: 'ສັນຍານຂาด — ໃຊ້ຂໍ້ມູ້ນສຳຮອງ', seoHeading: 'เครื่องมือแปรຄ່າເງິນອອນລາຍ', seoIntro: 'zrate.io ຊ່ວຍໃຫ້ເບິ່ງອັດຕາລ່າສຸດ ປຽບທຽບຫຼາຍສະກຸນ ແລະຄຳນວນໄດ້ໄວ.', seoCards: [{ title: 'ອັດຕາແບບສົດ', body: 'ອັບເດດຄົ່າເງິນຈາກຂໍ້ມູ້ນອອນລາຍ ພ້ອມຂໍ້ມູ້ນສຳຮອງ.' }, { title: 'ຮອງຮັບຫຼາຍສະກຸນ', body: 'ເບິ່ງ THB, USD, EUR, JPY, LAK, MMK, KHR, CNY ແລະ USDT.' }, { title: 'ພາສາໃນພາກພື້ນ', body: 'ໃຊ້ໄດ້ທັ້ງພາສາລາວ ໄທ ອັງກິດ ມຽນມາ ແລະຂະແມ.' }] },
+  my: { heroTitle: 'ယနေ့ ငွေလဲနှူန်းများ | zrate.io', heroDescription: 'THB, USD, USDT နှင့် နာမည်ကြီး ငွေကြေးများကို အချိန်နှင့်တပြေးညီး စစ်ဆေးပြီး ပြောင်းလဲတွက်ချက်ပါ', subtitle: 'အချိန်နှင့်တပြေးညီး ငွေလဲနှူန်းမက်ထရစ်', baseCurrency: 'အခြေခံငွေကြေး', amount: 'ပမာဏ', from: 'မှ', language: 'ဘာသာစကား', searchPlaceholder: 'ငွေကြေး / ကုဒ် ရှာရန်...', currencies: 'ငွေကြေးများ', syncing: 'စင့်ခ်လုပ်နေသည်...', offline: 'အော့ဖ်လိုင်းမုဒ်', live: 'တိုက်ရိုက်ဒေတာ', crypto: 'ခရစ်ပတို', active: 'အသုံးပြုနေသည်', setBase: 'အခြေခံငွေကြေးထားရန်', addFavorite: 'စိတ်ကြိုက်ထဲထည့်ရန်', removeFavorite: 'စိတ်ကြိုက်မှဖယ်ရန်', loading: 'ငွေလဲဒေတာ ချိတ်ဆက်နေသည်...', error: 'ချိတ်ဆက်မှုပြတ်တောက် — သိမ်းထားသောဒေတာသုံးနေသည်', seoHeading: 'လွယ်ကူသော အွန်လိုင်း ငွေကြေးပြောင်းစက်', seoIntro: 'zrate.io ဖြင့် ငွေလဲနှူန်းများကို နှိုင်းယှဉ်ကြည့်ရှုပြီး တစ်နေရာတည်းတွင် မြန်မြန်တွက်ချက်နိုင်ပါသည်။', seoCards: [{ title: 'တိုက်ရိုက် ငွေလဲနှူန်း', body: 'အွန်လိုင်းဒေတာမှ အချိန်နှင့်တပြေးညီး အပ်ဒိတ်လုပ်ပြီး ချိတ်ဆက်မှုပြတ်လျှင် သိမ်းထားသောဒေတာကိုသုံးသည်။' }, { title: 'ငွေကြေးများစွာ', body: 'THB, USD, EUR, JPY, LAK, MMK, KHR, CNY နှင့် USDT ကို စစ်ဆေးနိုင်သည်။' }, { title: 'ဒေသသုံး ဘာသာစကား', body: 'မြန်မာ၊ ထိုင်း၊ အင်္ဂလိပ်၊ လာအို နှင့် ခမာ ဘာသာများကို အသုံးပြုနိုင်သည်။' }] },
+  km: { heroTitle: 'អត្រាប្តូរប្រាស់ថ្ងៃនេះ | zrate.io', heroDescription: 'ពិនិត្យ និងបម្លែរ THB, USD, USDT និងរូបិយប័ណ្ណពេញនិយមជាច្រើនតាមពេលវេលាពិត។', subtitle: 'ម៉ាទ្រីសអត្រាប្តូរប្រាស់ពេលវេលាពិត', baseCurrency: 'រូបិយប័ណ្ណគោល', amount: 'ចំនួនប្រាក់', from: 'ពីរូបិយប័ណ្ណ', language: 'ភាសា', searchPlaceholder: 'ស្វែងរករូបិយប័ណ្ណ / កូដ...', currencies: 'រូបិយប័ណ្ណ', syncing: 'កំពុងធ្វើសមកាលកម្ម...', offline: 'របៀបក្រៅបណ្ដាញ', live: 'ទិន្នន័យផ្ទាល់', crypto: 'គ្រីបតូ', active: 'កំពុងប្រើ', setBase: 'កំណត់ជាគោល', addFavorite: 'បន្ថែមទៅចំណូលចិត្ត', removeFavorite: 'ដកចេញពីចំណូលចិត្ត', loading: 'កំពុងភ្ជាប់ទិន្នន័យអត្រាប្តូរ...', error: 'បាត់សញ្ញា — ប្រើទិន្នន័យបម្រុង', seoHeading: 'ឧបករណ៍បម្លែររូបិយប័ណ្ណអនឡាញ', seoIntro: 'zrate.io ជួយប្រៀបធៀបអត្រាប្តូរប្រាក់ គណនាចំនួនប្រាក់ និងតាមដានរូបិយប័ណ្ណសំខាន់ៗក្នុងទំព័រតែមួយ។', seoCards: [{ title: 'អត្រាប្តូរប្រាស់ផ្ទាល់', body: 'ធ្វើបច្ចុប្បន្នភាពពីទិន្នន័យអនឡាញ និងមានទិន្នន័យបម្រុងពេលបាត់ការតភ្ជាប់។' }, { title: 'គាំទ្ររូបិយប័ណ្ណច្រើន', body: 'ពិនិត្យ THB, USD, EUR, JPY, LAK, MMK, KHR, CNY និង USDT បានងាយស្រួល។' }, { title: 'ភាសាក្នុងតំបន់', body: 'ប្រើបានជាភាសាខ្មែរ ថៃ អង់គ្លេស ឡាវ និងមីយ៉ាន់ម៉ា។' }] },
 }
 
 const CURRENCY_PRIORITY: Record<LanguageCode, string[]> = {
   th: ['THB', 'USD', 'USDT', 'EUR', 'JPY', 'LAK', 'MMK', 'KHR'],
   en: ['USD', 'USDT', 'EUR', 'GBP', 'JPY', 'THB', 'SGD', 'AUD'],
-  la: ['LAK', 'THB', 'USD', 'USDT', 'CNY', 'VND', 'KHR', 'MMK'],
+  lo: ['LAK', 'THB', 'USD', 'USDT', 'CNY', 'VND', 'KHR', 'MMK'],
   my: ['MMK', 'THB', 'USD', 'USDT', 'SGD', 'CNY', 'INR', 'KHR'],
-  kh: ['KHR', 'THB', 'USD', 'USDT', 'CNY', 'VND', 'LAK', 'MMK'],
+  km: ['KHR', 'THB', 'USD', 'USDT', 'CNY', 'VND', 'LAK', 'MMK'],
 }
 
 const SEO_PAIR_LINKS = [
@@ -267,7 +271,7 @@ const LOCALIZED_CONTENT: Record<LanguageCode, LocalizedContent> = {
       { question: 'Are these bank rates?', answer: 'Rates on zrate.io are reference values for quick calculation. Banks, exchanges and transfer services may add fees or spreads.' },
     ],
   },
-  la: {
+  lo: {
     usdtName: 'Tether USD',
     heroEyebrow: 'ຕາຕະລາງເງິນສົດ',
     heroHeading: 'ແປງຄ່າເງິນໄວ ແລະເບິ່ງອັດຕາສຳຄັນໃນໜ້າດຽວ',
@@ -285,10 +289,10 @@ const LOCALIZED_CONTENT: Record<LanguageCode, LocalizedContent> = {
     switchToDark: 'ປ່ຽນເປັນໂໝດມືດ',
     switchToLight: 'ປ່ຽນເປັນໂໝດສະຫວ່າງ',
     currencyGuide: 'ຄູ່ມືຄ່າເງິນ',
-    articleHeading: 'ອັດຕາແລກປ່ຽນມື້ນີ້ ແລະເຄື່ອງມືແປງເງິນອອນລາຍ',
-    articleBody: 'zrate.io ຊ່ວຍໃຫ້ເບິ່ງອັດຕາແລກປ່ຽນມື້ນີ້ໄດ້ໄວ ທັງບາດໄທ ໂດລາ ເອີໂຣ ເຢນ USDT ແລະສະກຸນເງິນໃນພາກພື້ນ.',
+    articleHeading: 'ອັດຕາແລກປ່ຽນມື້ນີ້ ແລະເຄື່ອງມືແປງເງິນອອນລាយ',
+    articleBody: 'zrate.io ຊ່ວຍໃຫ້ເບິ່ງອັດຕາແລກປ່ຽນມື້ນີ້ໄດ້ໄວ ທັງບາດໄທ ໂດລາ ເອີໂຣ ເຢນ USDT ແລະສະກຸນເງິນໃນພាកພື້ນ.',
     whyHeading: 'ເປັນຫຍັງຄວນເບິ່ງຄ່າເງິນກ່ອນແລກ ຫຼືໂອນເງິນ',
-    whyBody: 'ອັດຕາແລກປ່ຽນປ່ຽນໄດ້ຕະຫຼອດມື້ ການເບິ່ງເລດລ່າສຸດຊ່ວຍຄຳນວນຍອດປາຍທາງໄດ້ດີຂຶ້ນ.',
+    whyBody: 'ອັດຕາແລກປ່ຽນປ່ຽนໄດ້ຕະຫຼອດມື້ ການເບິ່ງເລດລ່າສຸດຊ່ວຍຄຳນວນຍອດປາຍທາງໄດ້ດີຂຶ້ນ.',
     howHeading: 'ວິທີໃຊ້ zrate.io',
     howSteps: ['ໃສ່ຈຳນວນເງິນທີ່ຈະແປງ', 'ເລືອກສະກຸນເງິນຕົ້ນທາງ', 'ເບິ່ງຜົນໃນຕາຕະລາງ ຫຼືຄົ້ນຫາລະຫັດເງິນ'],
     popularPairsHeading: 'ຄູ່ເງິນທີ່ຄົນຄົ້ນຫາຫຼາຍ',
@@ -300,11 +304,11 @@ const LOCALIZED_CONTENT: Record<LanguageCode, LocalizedContent> = {
     schemaItemListName: 'ຄູ່ເງິນຍອດນິຍົມໃນ zrate.io',
     popularPairs: [
       { href: '/usd-thb', label: 'USD/THB', title: 'ໂດລາເປັນບາດ', description: 'ເບິ່ງຄ່າໂດລາ ການໂອນເງິນ ການຊື້ຂາຍ ແລະວາງແຜນແລກເງິນສົດ.' },
-      { href: '/usdt-thb', label: 'USDT/THB', title: 'USDT ເປັນບາດ', description: 'ປະເມີນມູນຄ່າ USDT ແລະລາຄາອ້າງອີງຄຣິບໂຕເທົ່າກັບບາດ.' },
+      { href: '/usdt-thb', label: 'USDT/THB', title: 'USDT เป็นบາດ', description: 'ປະເມີນມູນຄ່າ USDT ແລະລາຄາອ້າງອີງຄຣິບໂຕເທົ່າກັບບາດ.' },
       { href: '/eur-thb', label: 'EUR/THB', title: 'ເອີໂຣເປັນບາດ', description: 'ຕິດຕາມຄ່າເອີໂຣສຳລັບທ່ອງທ່ຽວ ທຸລະກິດ ແລະການຊຳລະເງິນ.' },
       { href: '/thb-lak', label: 'THB/LAK', title: 'ບາດເປັນກີບ', description: 'ຄູ່ເງິນສຳຄັນສຳລັບໄທ-ລາວ ການເດີນທາງ ແລະການຄ້າຊາຍແດນ.' },
       { href: '/thb-mmk', label: 'THB/MMK', title: 'ບາດເປັນຈາດມຽນມາ', description: 'ປະເມີນການໂອນເງິນ ແລະຄ່າໃຊ້ຈ່າຍປະຈຳວັນ.' },
-      { href: '/thb-khr', label: 'THB/KHR', title: 'ບາດເປັນຣຽວກຳປູເຈຍ', description: 'ເໝາະສຳລັບທ່ອງທ່ຽວ ການຄ້າຊາຍແດນ ແລະການປຽບທຽບລາຄາ.' },
+      { href: '/thb-khr', label: 'THB/KHR', title: 'ບาดເປັນຣຽວກຳປູເຈຍ', description: 'ເໝາະສຳລັບທ່ອງທ່ຽວ ການຄ້າຊາຍແດນ ແລະການປຽບທຽບລາຄາ.' },
     ],
     useCases: [
       { title: 'ເຊັກກ່ອນແລກເງິນສົດ', body: 'ປະເມີນຍອດບາດ ໂດລາ ເອີໂຣ ເຢນ ແລະເງິນເພື່ອນບ້ານກ່ອນແລກ ຫຼືໂອນ.' },
@@ -315,7 +319,7 @@ const LOCALIZED_CONTENT: Record<LanguageCode, LocalizedContent> = {
       { question: 'zrate.io ໃຊ້ເຮັດຫຍັງ?', answer: 'zrate.io ແມ່ນເຄື່ອງມືເບິ່ງອັດຕາແລກປ່ຽນ ແລະແປງເງິນອອນລາຍ.' },
       { question: 'ອັດຕາອັບເດດເທົ່າໃດ?', answer: 'ໜ້າຫຼັກດຶງຂໍ້ມູນໃໝ່ທຸກ 60 ວິນາທີ ແລະມີຂໍ້ມູນສຳຮອງ.' },
       { question: 'ເບິ່ງ USD/THB ແລະ USDT/THB ໄດ້ບໍ?', answer: 'ໄດ້ ເລືອກໃນເຄື່ອງມືແປງເງິນ ຫຼືເຂົ້າໜ້າຄູ່ເງິນໂດຍກົງ.' },
-      { question: 'ເລດນີ້ເປັນເລດທະນາຄານບໍ?', answer: 'ເປັນຄ່າອ້າງອີງເພື່ອຄຳນວນເບື້ອງຕົ້ນ ທະນາຄານ ຫຼືຮ້ານແລກເງິນອາດມີຄ່າທຳນຽມ.' },
+      { question: 'ເລດນີ້ເປັນເລດທະນາຄານບໍ?', answer: 'ເປັນຄ່າອ້າງອີງເພື່ອຄຳນວນເບື້ອງຕົ້ນ ທະນາຄານ ຫຼືຮ້านແລກເງິນອາດມີຄ່າທຳນຽມ.' },
     ],
   },
   my: {
@@ -369,7 +373,7 @@ const LOCALIZED_CONTENT: Record<LanguageCode, LocalizedContent> = {
       { question: 'ဤနှုန်းများသည်ဘဏ်နှုန်းများလား?', answer: 'ဤနှုန်းများသည် အမြန်တွက်ချက်ရန်အတွက်အညွှန်းတန်ဖိုးများဖြစ်သည်။ ဘဏ်များနှင့်ငွေလဲဆိုင်များတွင် fee/spread ရှိနိုင်သည်။' },
     ],
   },
-  kh: {
+  km: {
     usdtName: 'Tether USD',
     heroEyebrow: 'តារាងរូបិយប័ណ្ណផ្ទាល់',
     heroHeading: 'បម្លែងរូបិយប័ណ្ណបានលឿន និងមើលអត្រាសំខាន់ៗក្នុងទំព័រតែមួយ',
@@ -390,7 +394,7 @@ const LOCALIZED_CONTENT: Record<LanguageCode, LocalizedContent> = {
     articleHeading: 'អត្រាប្តូរប្រាក់ថ្ងៃនេះ និងឧបករណ៍បម្លែងរូបិយប័ណ្ណអនឡាញ',
     articleBody: 'zrate.io ជួយពិនិត្យអត្រាប្តូរប្រាក់ថ្ងៃនេះបានលឿន សម្រាប់ប្រាក់បាត ដុល្លារ អឺរ៉ូ យ៉េន USDT និងរូបិយប័ណ្ណក្នុងតំបន់។',
     whyHeading: 'ហេតុអ្វីគួរពិនិត្យអត្រាមុនប្តូរ ឬផ្ទេរប្រាក់',
-    whyBody: 'អត្រាប្តូរប្រាក់អាចផ្លាស់ប្តូរពេញមួយថ្ងៃ។ ការពិនិត្យអត្រាចុងក្រោយជួយប៉ាន់ស្មានចំនួនប្រាក់បានច្បាស់ជាងមុន។',
+    whyBody: 'អត្រាប្តូរប្រាក់អាចផ្លាស់ប្តូរពេញមួយថ្ងៃ។ การពិនិត្យអត្រាចុងក្រោយជួយប៉ាន់ស្មានចំនួនប្រាក់បានច្បាស់ជាងមុន។',
     howHeading: 'របៀបប្រើ zrate.io',
     howSteps: ['បញ្ចូលចំនួនប្រាក់ដែលចង់បម្លែង', 'ជ្រើសរើសរូបិយប័ណ្ណដើម', 'មើលលទ្ធផលក្នុងតារាង ឬស្វែងរកកូដរូបិយប័ណ្ណ'],
     popularPairsHeading: 'គូរូបិយប័ណ្ណដែលគេស្វែងរកញឹកញាប់',
@@ -429,35 +433,51 @@ const SPOTLIGHT_PAIRS = [
   { base: 'THB', quote: 'LAK', label: 'THB/LAK' },
 ]
 
-export default function Home() {
-  const [rates, setRates] = useState<Rates>({})
-  const [language, setLanguage] = useState<LanguageCode>('th')
-  const [baseCurrency, setBaseCurrency] = useState('THB')
+export default function HomeClient({
+  locale,
+  initialBase,
+  initialRates,
+}: {
+  locale: LanguageCode
+  initialBase: string
+  initialRates: Record<string, number>
+}) {
+  const [rates, setRates] = useState<Rates>(initialRates)
+  const [language, setLanguage] = useState<LanguageCode>(locale)
+  const [baseCurrency, setBaseCurrency] = useState(initialBase)
   const [amount, setAmount] = useState('1')
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(Object.keys(initialRates).length === 0)
   const [error, setError] = useState('')
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  const [favorites, setFavorites] = useState<string[]>(CURRENCY_PRIORITY.th)
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [favorites, setFavorites] = useState<string[]>(CURRENCY_PRIORITY[locale])
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
 
-  /* Sync theme from <html> data attribute set by inline script */
   useEffect(() => {
     const htmlTheme = document.documentElement.getAttribute('data-theme') as 'light' | 'dark' | null
-    if (htmlTheme) setTheme(htmlTheme)
+    if (htmlTheme) {
+      setTheme(htmlTheme)
+    } else {
+      setTheme('dark')
+    }
 
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const onChange = (e: MediaQueryListEvent) => {
       const stored = localStorage.getItem('zrate-theme')
       if (!stored) {
-        const next = e.matches ? 'dark' : 'light'
-        document.documentElement.setAttribute('data-theme', next)
-        setTheme(next)
+        document.documentElement.setAttribute('data-theme', 'dark')
+        setTheme('dark')
       }
     }
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
+
+  useEffect(() => {
+    if (Object.keys(initialRates).length > 0 && lastUpdated === null) {
+      setLastUpdated(new Date())
+    }
+  }, [initialRates, lastUpdated])
 
   const toggleTheme = useCallback(() => {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -498,16 +518,19 @@ export default function Home() {
     }
   }, [baseCurrency, language])
 
+  // Sync rates on mount if initialRates was empty, and set up interval
   useEffect(() => {
-    fetchRates()
+    if (Object.keys(rates).length === 0) {
+      fetchRates()
+    }
     const interval = setInterval(fetchRates, 60000)
     return () => clearInterval(interval)
-  }, [fetchRates])
+  }, [fetchRates, rates])
 
-  const t = UI_TEXT[language]
-  const content = LOCALIZED_CONTENT[language]
+  const t = UI_TEXT[language] || UI_TEXT.th
+  const content = LOCALIZED_CONTENT[language] || LOCALIZED_CONTENT.th
   const selectedLanguage = LANGUAGE_OPTIONS.find(item => item.code === language) ?? LANGUAGE_OPTIONS[0]
-  const isCompactTitle = language === 'la' || language === 'my' || language === 'kh'
+  const isCompactTitle = language === 'lo' || language === 'my' || language === 'km'
   const amountNum = parseFloat(amount) || 0
   const currencies = Object.keys(CURRENCY_INFO)
   const currencyDisplayNames = useMemo(() => {
@@ -517,17 +540,19 @@ export default function Home() {
       return null
     }
   }, [selectedLanguage.locale])
+
   const getCurrencyName = useCallback((currency: string) => {
     if (currency === 'USDT') return content.usdtName
     return currencyDisplayNames?.of(currency) ?? CURRENCY_INFO[currency]?.name ?? currency
   }, [content.usdtName, currencyDisplayNames])
+
   const filtered = currencies.filter(c =>
     c.toLowerCase().includes(search.toLowerCase()) ||
     getCurrencyName(c).toLowerCase().includes(search.toLowerCase())
   )
 
   const sortedCurrencies = useMemo(() => {
-    const preferred = CURRENCY_PRIORITY[language]
+    const preferred = CURRENCY_PRIORITY[language] || CURRENCY_PRIORITY.th
     return [...filtered].sort((a, b) => {
       const favoriteDiff = Number(favorites.includes(b)) - Number(favorites.includes(a))
       if (favoriteDiff !== 0) return favoriteDiff
@@ -541,21 +566,13 @@ export default function Home() {
   }, [favorites, filtered, language])
 
   const changeLanguage = (nextLanguage: LanguageCode) => {
-    const nextCurrency = LANGUAGE_OPTIONS.find(item => item.code === nextLanguage)?.currency ?? 'USD'
-    setLanguage(nextLanguage)
-    setBaseCurrency(nextCurrency)
-    setFavorites(CURRENCY_PRIORITY[nextLanguage])
-    setSearch('')
     localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage)
     document.cookie = `${LANGUAGE_STORAGE_KEY}=${nextLanguage}; path=/; max-age=31536000; SameSite=Lax`
+    
+    // Redirect to localized homepage
+    const targetPath = nextLanguage === 'th' ? '/' : `/${nextLanguage}`
+    window.location.href = targetPath
   }
-
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) as LanguageCode | null
-    if (savedLanguage && LANGUAGE_OPTIONS.some(item => item.code === savedLanguage) && savedLanguage !== language) {
-      changeLanguage(savedLanguage)
-    }
-  }, [])
 
   const toggleFavorite = (c: string) => {
     setFavorites(prev =>
@@ -588,12 +605,14 @@ export default function Home() {
     return value.toFixed(6)
   }
 
+  const prefix = language === 'th' ? '' : `/${language}`
+
   const homepageJsonLd = useMemo(() => ({
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'FAQPage',
-        '@id': 'https://zrate.io/#faq',
+        '@id': `https://zrate.io${prefix}/#faq`,
         mainEntity: content.faqs.map(item => ({
           '@type': 'Question',
           name: item.question,
@@ -605,33 +624,17 @@ export default function Home() {
       },
       {
         '@type': 'ItemList',
-        '@id': 'https://zrate.io/#popular-currency-pairs',
+        '@id': `https://zrate.io${prefix}/#popular-currency-pairs`,
         name: content.schemaItemListName,
         itemListElement: content.popularPairs.map((item, index) => ({
           '@type': 'ListItem',
           position: index + 1,
           name: `${item.label} ${item.title}`,
-          url: `https://zrate.io${item.href}`,
+          url: `https://zrate.io${prefix}${item.href}`,
         })),
       },
     ],
-  }), [content])
-
-  useEffect(() => {
-    document.documentElement.lang = selectedLanguage.locale.split('-')[0]
-    document.title = t.heroTitle
-
-    const setMeta = (selector: string, value: string) => {
-      const element = document.head.querySelector<HTMLMetaElement>(selector)
-      if (element) element.content = value
-    }
-
-    setMeta('meta[name="description"]', t.heroDescription)
-    setMeta('meta[property="og:title"]', t.heroTitle)
-    setMeta('meta[property="og:description"]', t.heroDescription)
-    setMeta('meta[name="twitter:title"]', t.heroTitle)
-    setMeta('meta[name="twitter:description"]', t.heroDescription)
-  }, [selectedLanguage.locale, t.heroDescription, t.heroTitle])
+  }), [content, prefix])
 
   return (
     <main className={styles.main}>
@@ -653,7 +656,7 @@ export default function Home() {
           </div>
           <div className={styles.brandCopy}>
             <h1 className={`${styles.logoText} ${isCompactTitle ? styles.compactTitle : ''}`}>
-              {t.heroTitle}
+              zrate.io
             </h1>
             <p className={styles.logoSub}>{t.heroDescription}</p>
           </div>
@@ -666,7 +669,7 @@ export default function Home() {
               {loading ? t.syncing : error ? t.offline : t.live}
             </span>
             {lastUpdated && (
-              <span className={styles.updateTime}>
+              <span className={styles.updateTime} suppressHydrationWarning>
                 {lastUpdated.toLocaleTimeString(selectedLanguage.locale)}
               </span>
             )}
@@ -721,6 +724,8 @@ export default function Home() {
         </div>
       </header>
 
+      <SeoNav lang={language} active="home" />
+
       {/* Error Banner */}
       {error && (
         <div className={styles.errorBanner}>
@@ -734,10 +739,10 @@ export default function Home() {
           <h2 id="home-hero-heading">{content.heroHeading}</h2>
           <p>{content.heroBody}</p>
           <div className={styles.heroLinks} aria-label={content.recommendedPairsLabel}>
-            <Link href="/usd-thb">USD/THB</Link>
-            <Link href="/usdt-thb">USDT/THB</Link>
-            <Link href="/thb-lak">THB/LAK</Link>
-            <Link href="/thb-mmk">THB/MMK</Link>
+            <Link href={`${prefix}/usd-thb`}>USD/THB</Link>
+            <Link href={`${prefix}/usdt-thb`}>USDT/THB</Link>
+            <Link href={`${prefix}/thb-lak`}>THB/LAK</Link>
+            <Link href={`${prefix}/thb-mmk`}>THB/MMK</Link>
           </div>
         </div>
 
@@ -745,7 +750,7 @@ export default function Home() {
           {SPOTLIGHT_PAIRS.map(pair => {
             const pairRate = getCrossRate(pair.base, pair.quote)
             return (
-              <Link className={styles.metricCard} href={`/${pair.base.toLowerCase()}-${pair.quote.toLowerCase()}`} key={pair.label}>
+              <Link className={styles.metricCard} href={`${prefix}/${pair.base.toLowerCase()}-${pair.quote.toLowerCase()}`} key={pair.label}>
                 <span>{pair.label}</span>
                 <strong>{formatSpotlightRate(pairRate)}</strong>
                 <small>{content.oneUnit} {pair.base} {content.to} {pair.quote}</small>
@@ -760,7 +765,7 @@ export default function Home() {
         <div className={styles.pairTickerViewport}>
           <div className={styles.pairMenuLinks}>
             {[...SEO_PAIR_LINKS, ...SEO_PAIR_LINKS].map((item, index) => (
-              <Link href={item.href} key={`${item.href}-${index}`}>
+              <Link href={`${prefix}${item.href}`} key={`${item.href}-${index}`}>
                 {item.label}
               </Link>
             ))}
@@ -978,11 +983,11 @@ export default function Home() {
         <section className={styles.popularPairsSection} aria-labelledby="popular-pairs-heading">
           <div className={styles.sectionHeadingRow}>
             <h2 id="popular-pairs-heading">{content.popularPairsHeading}</h2>
-            <Link href="/usd-thb">{content.popularPairsCta}</Link>
+            <Link href={`${prefix}/usd-thb`}>{content.popularPairsCta}</Link>
           </div>
           <div className={styles.popularPairGrid}>
             {content.popularPairs.map(item => (
-              <Link className={styles.popularPairCard} href={item.href} key={item.href}>
+              <Link className={styles.popularPairCard} href={`${prefix}${item.href}`} key={item.href}>
                 <span>{item.label}</span>
                 <strong>{item.title}</strong>
                 <p>{item.description}</p>
@@ -996,7 +1001,7 @@ export default function Home() {
           <p>{content.regionBody}</p>
           <div className={styles.keywordLinks} aria-label={content.keywordLinksLabel}>
             {SEO_PAIR_LINKS.map(item => (
-              <Link href={item.href} key={item.href}>
+              <Link href={`${prefix}${item.href}`} key={item.href}>
                 {item.label}
               </Link>
             ))}
@@ -1016,15 +1021,7 @@ export default function Home() {
         </section>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerText}>
-          <span>zrate.io</span>
-          <span className={styles.footerDivider}>|</span>
-          <span>{t.footerData}</span>
-          <span className={styles.footerDivider}>|</span>
-          <span>{t.footerSync}</span>
-        </div>
-      </footer>
+      <Footer lang={language} />
     </main>
   )
 }

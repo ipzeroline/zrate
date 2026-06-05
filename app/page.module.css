@@ -3,9 +3,9 @@
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  max-width: 1240px;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 0 24px 56px;
+  padding: 0 var(--page-pad) 56px;
 }
 
 /* ===== HEADER ===== */
@@ -15,7 +15,7 @@
   justify-content: space-between;
   padding: 22px 0 18px;
   margin-bottom: 18px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
 }
 
@@ -26,6 +26,11 @@
   min-width: 0;
   flex: 1 1 auto;
   max-width: 860px;
+  text-decoration: none;
+}
+
+.logoArea:hover {
+  text-decoration: none;
 }
 
 .logoIcon {
@@ -71,6 +76,10 @@
   color: var(--ink-secondary);
   margin-top: 4px;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ===== HEADER ACTIONS ===== */
@@ -78,7 +87,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .statusBar {
@@ -90,6 +102,7 @@
   border-radius: var(--radius-full);
   padding: 6px 14px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .statusDot {
@@ -130,6 +143,31 @@
 }
 
 /* --- Buttons in header --- */
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-glass);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.navBtn:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-surface);
+  color: var(--ink);
+}
+
 .iconBtn {
   display: flex;
   align-items: center;
@@ -192,17 +230,20 @@
   position: relative;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .languageSelect {
   height: 36px;
+  width: 100%;
+  min-width: 96px;
   max-width: 124px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background-color: var(--surface-glass);
   color: var(--ink);
   cursor: pointer;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.875rem;
   font-weight: 500;
   outline: none;
@@ -521,7 +562,7 @@
   border-radius: 10px;
   padding: 15px 16px;
   color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 1.78rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -557,7 +598,7 @@
   border-radius: 10px;
   padding: 17px 38px 17px 16px;
   color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 1.02rem;
   font-weight: 700;
   outline: none;
@@ -640,7 +681,7 @@
   border-radius: 10px;
   padding: 13px 40px 13px 42px;
   color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.9375rem;
   outline: none;
   transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
@@ -859,7 +900,7 @@
   border-radius: 10px;
   padding: 9px;
   color: var(--ink-secondary);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.8125rem;
   font-weight: 750;
   cursor: pointer;
@@ -1201,11 +1242,22 @@
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .main {
-    padding: 0 14px 40px;
+    padding: 0 var(--page-pad) 40px;
   }
 
   .header {
     padding: 16px 0 14px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .logoArea {
+    flex-basis: 100%;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .logoText {
@@ -1280,6 +1332,12 @@
 
   .searchWrapper {
     justify-content: flex-start;
+    width: 100%;
+  }
+
+  .searchBox {
+    min-width: 0;
+    flex-basis: 100%;
   }
 }
 
@@ -1303,11 +1361,21 @@
   .headerActions {
     width: 100%;
     justify-content: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px 36px minmax(96px, auto);
+    align-items: center;
   }
 
   .statusBar {
+    min-width: 0;
     padding: 5px 12px;
     gap: 6px;
+  }
+
+  .statusText,
+  .updateTime {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .pairMenu {
@@ -1336,7 +1404,9 @@
   }
 
   .languageSelect {
-    max-width: 108px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
     font-size: 0.8125rem;
   }
 
@@ -1356,6 +1426,20 @@
   .converterRow {
     flex-direction: column;
     gap: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .headerActions {
+    grid-template-columns: minmax(0, 1fr) 36px 36px;
+  }
+
+  .languageSelectWrap {
+    grid-column: 1 / -1;
+  }
+
+  .statusBar {
+    padding-inline: 10px;
   }
 }
 

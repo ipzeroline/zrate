@@ -1,0 +1,640 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { NativeBannerAd, ResponsiveBannerAd } from '../../components/AdsterraAds'
+import { Footer } from '../../components/Footer'
+import { PairTopBar } from './PairTopBar'
+import { getPairContent } from './pairContent'
+import styles from './page.module.css'
+
+type CurrencyCode = 'USD' | 'EUR' | 'USDT' | 'THB' | 'LAK' | 'MMK' | 'KHR' | 'JPY' | 'CNY' | 'SGD' | 'KRW'
+type LanguageCode = 'th' | 'en' | 'lo' | 'my' | 'km'
+
+const SITE_URL = 'https://zrate.io'
+const LOCALES = ['th', 'en', 'lo', 'my', 'km']
+
+const LOCALE_BY_LANGUAGE: Record<LanguageCode, string> = {
+  th: 'th-TH',
+  en: 'en-US',
+  lo: 'lo-LA',
+  my: 'my-MM',
+  km: 'km-KH',
+}
+
+const PAIRS = [
+  'usd-thb',
+  'usd-lak',
+  'usd-mmk',
+  'usd-khr',
+  'eur-thb',
+  'eur-usd',
+  'thb-usd',
+  'thb-lak',
+  'thb-mmk',
+  'thb-khr',
+  'thb-jpy',
+  'thb-cny',
+  'usdt-thb',
+  'usdt-usd',
+  'jpy-thb',
+  'cny-thb',
+  'sgd-thb',
+  'krw-thb',
+] as const
+
+const CURRENCY_NAMES: Record<CurrencyCode, Record<LanguageCode, string>> = {
+  USD: { th: 'ดอลลาร์สหรัฐ', en: 'US dollar', lo: 'ໂດລາສະຫະລັດ', my: 'အမေရိကန်ဒေါ်လာ', km: 'ដុល្លារអាមេរិក' },
+  EUR: { th: 'ยูโร', en: 'euro', lo: 'ເອີໂຣ', my: 'ယူရို', km: 'អឺរ៉ូ' },
+  USDT: { th: 'USDT', en: 'USDT', lo: 'USDT', my: 'USDT', km: 'USDT' },
+  THB: { th: 'บาทไทย', en: 'Thai baht', lo: 'ບາດໄທ', my: 'ထိုင်းဘတ်', km: 'ប្រាក់បាតថៃ' },
+  LAK: { th: 'กีบลาว', en: 'Lao kip', lo: 'ກີບລາວ', my: 'လာအိုကျပ်', km: 'គីបឡាវ' },
+  MMK: { th: 'จ๊าตเมียนมา', en: 'Myanmar kyat', lo: 'ຈາດມຽນມາ', my: 'မြန်မာကျပ်', km: 'គ្យាតមីយ៉ាន់ម៉ា' },
+  KHR: { th: 'เรียลกัมพูชา', en: 'Cambodian riel', lo: 'ຣຽວກຳປູເຈຍ', my: 'ကမ္ဘောដီးយားរីយယ်', km: 'រៀលកម្ពុជា' },
+  JPY: { th: 'เยนญี่ปุ่น', en: 'Japanese yen', lo: 'ເຢນຍີ່ປຸ່ນ', my: 'ဂျပန်ယန်း', km: 'យ៉េនជប៉ុន' },
+  CNY: { th: 'หยวนจีน', en: 'Chinese yuan', lo: 'ຢວນຈີນ', my: 'တရုတ်ယွမ်', km: 'យន់ចិន' },
+  SGD: { th: 'ดอลลาร์สิงคโปร์', en: 'Singapore dollar', lo: 'ໂດລາສິງກະໂປ', my: 'စင်ကာပူဒေါ်လာ', km: 'ដុល្លារសិង្ហបុរី' },
+  KRW: { th: 'วอนเกาหลี', en: 'Korean won', lo: 'ວອນເກົາຫຼີ', my: 'ကိုရီးယားဝမ်', km: 'វ៉ុនកូរ៉េ' },
+}
+
+const PAGE_TEXT: Record<LanguageCode, {
+  pairMenuLabel: string
+  pairMenuAria: string
+  eyebrow: string
+  rateDate: (date: string) => string
+  rateHelp: (base: CurrencyCode, quote: CurrencyCode) => string
+  examplesLabel: string
+  summaryAria: string
+  pairLabel: string
+  fromLabel: string
+  toLabel: string
+  relatedHeading: string
+  languageSuffix: string
+}> = {
+  th: {
+    pairMenuLabel: 'คู่เงินยอดนิยม',
+    pairMenuAria: 'เมนูคู่สกุลเงินยอดนิยม',
+    eyebrow: 'อัตราแลกเปลี่ยนวันนี้',
+    rateDate: date => `เรทอ้างอิง ณ วันที่ ${date}`,
+    rateHelp: (base, quote) => `ตัวอย่างการแปลงค่าเงิน ${base} เป็น ${quote} ตามอัตราแลกเปลี่ยนปัจจุบันบน zrate.io`,
+    examplesLabel: 'ตัวอย่างการแปลงค่าเงิน',
+    summaryAria: 'สรุปคู่สกุลเงิน',
+    pairLabel: 'คู่สกุลเงิน',
+    fromLabel: 'จากสกุลเงิน',
+    toLabel: 'เป็นสกุลเงิน',
+    relatedHeading: 'คู่สกุลเงินยอดนิยมอื่นๆ ในระบบ',
+    languageSuffix: 'ภาษาไทย',
+  },
+  en: {
+    pairMenuLabel: 'Popular pairs',
+    pairMenuAria: 'Popular currency-pair menu',
+    eyebrow: 'Today’s exchange rate',
+    rateDate: date => `Reference rate on ${date}`,
+    rateHelp: (base, quote) => `Currency conversion examples for ${base} to ${quote} based on current reference rates on zrate.io.`,
+    examplesLabel: 'Currency conversion examples',
+    summaryAria: 'Currency pair summary',
+    pairLabel: 'Currency pair',
+    fromLabel: 'From currency',
+    toLabel: 'To currency',
+    relatedHeading: 'Other popular currency pairs',
+    languageSuffix: 'English',
+  },
+  lo: {
+    pairMenuLabel: 'ຄູ່ເງິນຍອດນິຍົມ',
+    pairMenuAria: 'ເມນູຄູ່ເງິນຍອດນິຍົມ',
+    eyebrow: 'ອັດຕາແລກປ່ຽນມື້ນີ້',
+    rateDate: date => `ອັດຕາອ້າງອີງ ວັນທີ ${date}`,
+    rateHelp: (base, quote) => `ຕົວຢ່າງການແປງ ${base} ເປັນ ${quote} ຕາມອັດຕາແລກປ່ຽນສົດໃນ zrate.io.`,
+    examplesLabel: 'ຕົວຢ່າງການແປງເງິນ',
+    summaryAria: 'ສະຫຼຸບຄູ່ເງິນ',
+    pairLabel: 'ຄູ່ເງິນ',
+    fromLabel: 'ຈາກສະກຸນ',
+    toLabel: 'ເປັນສະກຸນ',
+    relatedHeading: 'ຄູ່ເງິນຍອດນິຍົມອື່ນໃນລະບົບ',
+    languageSuffix: 'ພາສາລາວ',
+  },
+  my: {
+    pairMenuLabel: 'လူကြိုက်များသော ငွေကြေးအတွဲများ',
+    pairMenuAria: 'လူကြိုက်များသော ငွေကြေးအတွဲ menu',
+    eyebrow: 'ယနေ့ ငွေလဲနှုန်း',
+    rateDate: date => `ကိုးကားနှုန်း ${date}`,
+    rateHelp: (base, quote) => `zrate.io ပေါ်ရှိ လက်ရှိကိုးကားနှုန်းထားများပေါ် မူတည်၍ ${base} မှ ${quote} သို့ ပြောင်းလဲမှု နမူနာများ။`,
+    examplesLabel: 'ငွေကြေးပြောင်းလဲမှုဥပမာများ',
+    summaryAria: 'ငွေကြေးအတွဲ အကျဉ်းချုပ်',
+    pairLabel: 'ငွေကြေးအတွဲ',
+    fromLabel: 'မူရင်းငွေကြေး',
+    toLabel: 'ပြောင်းမည့်ငွေကြေး',
+    relatedHeading: 'အခြားလူကြိုက်များသော ငွေကြေးအတွဲများ',
+    languageSuffix: 'မြန်မာ',
+  },
+  km: {
+    pairMenuLabel: 'គូរូបិយប័ណ្ណពេញនិយម',
+    pairMenuAria: 'ម៉ឺនុយគូរូបិយប័ណ្ណពេញនិយម',
+    eyebrow: 'អត្រាប្តូរប្រាក់ថ្ងៃនេះ',
+    rateDate: date => `អត្រាយោង ថ្ងៃទី ${date}`,
+    rateHelp: (base, quote) => `ឧទាហរណ៍នៃការបម្លែងរូបិយប័ណ្ណពី ${base} ទៅ ${quote} ផ្អែកលើអត្រាប្តូរប្រាក់បច្ចុប្បន្ននៅ zrate.io។`,
+    examplesLabel: 'ឧទាហរណ៍ការបម្លែងរូបិយប័ណ្ណ',
+    summaryAria: 'សង្ខេបគូរូបិយប័ណ្ណ',
+    pairLabel: 'គូរូបិយប័ណ្ណ',
+    fromLabel: 'ពីរូបិយប័ណ្ណ',
+    toLabel: 'ទៅរូបិយប័ណ្ណ',
+    relatedHeading: 'គូរូបិយប័ណ្ណពេញនិយមផ្សេងទៀត',
+    languageSuffix: 'ភាសាខ្មែរ',
+  },
+}
+
+const META_KEYWORDS: Record<LanguageCode, string[]> = {
+  th: ['อัตราแลกเปลี่ยนวันนี้', 'แปลงค่าเงิน', 'ค่าเงินวันนี้'],
+  en: ['exchange rate today', 'currency converter', 'live exchange rate'],
+  lo: ['ອັດຕาແລກປ່ຽນມື້ນີ້', 'ແປງສະກຸນເງິນ', 'ຄ່າເງິນມື້ນີ້'],
+  my: ['ယနေ့ငွေလဲနှုန်း', 'ငွေကြေးပြောင်း', 'တိုက်ရိုက်ငွေလဲနှုန်း'],
+  km: ['អត្រាប្តូរប្រាក់ថ្ងៃនេះ', 'បម្លែងរូបិយប័ណ្ណ', 'អត្រាប្តូរប្រាក់ផ្ទាល់'],
+}
+
+const USD_RATES: Record<CurrencyCode, number> = {
+  USD: 1,
+  EUR: 0.92,
+  USDT: 1,
+  THB: 35.2,
+  LAK: 21000,
+  MMK: 2100,
+  KHR: 4100,
+  JPY: 149.5,
+  CNY: 7.24,
+  SGD: 1.34,
+  KRW: 1325,
+}
+
+const EXAMPLE_AMOUNTS = [1, 10, 100, 1000]
+
+function parsePair(pair: string) {
+  const [base, quote] = pair.toUpperCase().split('-') as [CurrencyCode, CurrencyCode]
+  if (!base || !quote || !CURRENCY_NAMES[base] || !CURRENCY_NAMES[quote]) return null
+  return { base, quote }
+}
+
+function getPairTitle(pair: string, lang: LanguageCode, rate: number, dateStr: string) {
+  const parsed = parsePair(pair)
+  if (!parsed) return ''
+  const content = getPairContent(pair, lang, rate, dateStr)
+  return content.h2
+}
+
+const CONVERSION_AMOUNTS_BASE = [1, 5, 10, 25, 50, 100, 500, 1000, 5000, 10000]
+const CONVERSION_AMOUNTS_QUOTE = [1, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
+
+const STATS_TEXT: Record<LanguageCode, {
+  statsTitle: string
+  high30d: string
+  low30d: string
+  avg30d: string
+  volatility: string
+  volatilityLow: string
+  volatilityMed: string
+  volatilityHigh: string
+  tableBaseToQuoteTitle: (base: string, quote: string) => string
+  tableQuoteToBaseTitle: (quote: string, base: string) => string
+  faqTitle: string
+}> = {
+  th: {
+    statsTitle: 'สถิติอัตราแลกเปลี่ยนย้อนหลัง 30 วัน',
+    high30d: 'ราคาสูงสุด (30 วัน)',
+    low30d: 'ราคาต่ำสุด (30 วัน)',
+    avg30d: 'ค่าเฉลี่ย (30 วัน)',
+    volatility: 'ความผันผวน',
+    volatilityLow: 'ต่ำ',
+    volatilityMed: 'ปานกลาง',
+    volatilityHigh: 'สูง',
+    tableBaseToQuoteTitle: (base, quote) => `ตารางคำนวณเงิน ${base} เป็น ${quote}`,
+    tableQuoteToBaseTitle: (quote, base) => `ตารางคำนวณเงิน ${quote} เป็น ${base}`,
+    faqTitle: 'คำถามที่พบบ่อย (FAQs)',
+  },
+  en: {
+    statsTitle: '30-Day Historical Exchange Statistics',
+    high30d: '30-Day High',
+    low30d: '30-Day Low',
+    avg30d: '30-Day Average',
+    volatility: 'Volatility',
+    volatilityLow: 'Low',
+    volatilityMed: 'Medium',
+    volatilityHigh: 'High',
+    tableBaseToQuoteTitle: (base, quote) => `${base} to ${quote} Conversion Table`,
+    tableQuoteToBaseTitle: (quote, base) => `${quote} to ${base} Conversion Table`,
+    faqTitle: 'Frequently Asked Questions (FAQs)',
+  },
+  lo: {
+    statsTitle: 'ສະຖິຕິອັດຕາແລກປ່ຽນຍ້ອນຫຼັງ 30 ວັນ',
+    high30d: 'ລາຄາສູງສຸດ (30 ວັນ)',
+    low30d: 'ລາຄາຕ່ຳສຸດ (30 ວັນ)',
+    avg30d: 'ຄ່າສະເລ່ຍ (30 ວັນ)',
+    volatility: 'ຄວາມຜັນຜວນ',
+    volatilityLow: 'ຕ່ຳ',
+    volatilityMed: 'ປານກາງ',
+    volatilityHigh: 'ສູງ',
+    tableBaseToQuoteTitle: (base, quote) => `ຕາຕະລາງການແປງເງິນ ${base} ເປັນ ${quote}`,
+    tableQuoteToBaseTitle: (quote, base) => `ຕາຕະລາງການແປງເງິນ ${quote} ເປັນ ${base}`,
+    faqTitle: 'ຄໍາຖາມທີ່ພົບເລື້ອຍ (FAQs)',
+  },
+  my: {
+    statsTitle: '၃၀ ရက်အတွင်း ငွေလဲနှုန်းဆိုင်ရာ စာရင်းအင်းများ',
+    high30d: '၃၀ ရက်အတွင်း အမြင့်ဆုံးနှုန်း',
+    low30d: '၃၀ ရက်အတွင်း အနိမ့်ဆုံးနှုန်း',
+    avg30d: '၃၀ ရက်အတွင်း ပျမ်းမျှနှုန်း',
+    volatility: 'ပြောင်းလဲမှုနှုန်း',
+    volatilityLow: 'နည်းသည်',
+    volatilityMed: 'အလယ်အလတ်',
+    volatilityHigh: 'များသည်',
+    tableBaseToQuoteTitle: (base, quote) => `${base} မှ ${quote} သို့ ပြောင်းလဲခြင်းဇယား`,
+    tableQuoteToBaseTitle: (quote, base) => `${quote} မှ ${base} သို့ ပြောင်းလဲခြင်းဇယား`,
+    faqTitle: 'မေးလေ့ရှိသော မေးခွန်းများ (FAQs)',
+  },
+  km: {
+    statsTitle: 'ស្ថិតិអត្រាប្តូរប្រាក់យោង ៣០ ថ្ងៃ',
+    high30d: 'តម្លៃខ្ពស់បំផុត (៣០ ថ្ងៃ)',
+    low30d: 'តម្លៃទាបបំផុត (៣០ ថ្ងៃ)',
+    avg30d: 'តម្លៃមធ្យម (៣០ ថ្ងៃ)',
+    volatility: 'ការប្រែប្រួល',
+    volatilityLow: 'ទាប',
+    volatilityMed: 'មធ្យម',
+    volatilityHigh: 'ខ្ពស់',
+    tableBaseToQuoteTitle: (base, quote) => `តារាងបម្លែងប្រាក់ ${base} ទៅ ${quote}`,
+    tableQuoteToBaseTitle: (quote, base) => `តារាងបម្លែងប្រាក់ ${quote} ទៅ ${base}`,
+    faqTitle: 'សំណួរដែលគេសួរញឹកញាប់ (FAQs)',
+  },
+}
+
+function getPairDescription(pair: string, lang: LanguageCode, rate: number, dateStr: string) {
+  const content = getPairContent(pair, lang, rate, dateStr)
+  return content.p1
+}
+
+function formatMoney(value: number, currency: CurrencyCode, lang: LanguageCode) {
+  const locale = LOCALE_BY_LANGUAGE[lang]
+  if (value >= 1000000) return value.toLocaleString(locale, { maximumFractionDigits: 0 })
+  if (value >= 1000) return value.toLocaleString(locale, { maximumFractionDigits: 2 })
+  if (value >= 1) return value.toLocaleString(locale, { maximumFractionDigits: 4 })
+  return value.toFixed(6)
+}
+
+function formatDate(date: Date, lang: LanguageCode) {
+  return date.toLocaleDateString(LOCALE_BY_LANGUAGE[lang], {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  })
+}
+
+// Server-side rates fetcher with cache revalidation
+async function fetchServerRates(base: string): Promise<{ rates: Record<string, number>; timestamp: Date }> {
+  const apiBase = base === 'USDT' ? 'USD' : base
+  try {
+    const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${apiBase}`, {
+      next: { revalidate: 300 } // revalidate every 5 minutes
+    })
+    if (!res.ok) throw new Error('API failed')
+    const data = await res.json()
+    const rates = data.rates || {}
+    rates['USDT'] = rates['USD'] || 1
+    const ts = data.time_last_updated ? new Date(data.time_last_updated * 1000) : new Date()
+    return { rates, timestamp: ts }
+  } catch (err) {
+    console.error('Failed server fetch, fallback to mock rates', err)
+    const mock: Record<string, number> = { ...USD_RATES }
+    const baseValue = mock[base as CurrencyCode] || 1
+    const normalized: Record<string, number> = {}
+    Object.entries(mock).forEach(([k, v]) => {
+      normalized[k] = v / baseValue
+    })
+    return { rates: normalized, timestamp: new Date() }
+  }
+}
+
+export const dynamic = 'force-dynamic'
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  const params: Array<{ locale: string; pair: string }> = []
+  for (const locale of LOCALES) {
+    for (const pair of PAIRS) {
+      params.push({ locale, pair })
+    }
+  }
+  return params
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; pair: string }> }): Promise<Metadata> {
+  const resolvedParams = await params
+  const lang = (LOCALES.includes(resolvedParams.locale) ? resolvedParams.locale : 'th') as LanguageCode
+  if (!PAIRS.includes(resolvedParams.pair as typeof PAIRS[number])) return {}
+
+  const parsed = parsePair(resolvedParams.pair)
+  if (!parsed) return {}
+
+  const { rates, timestamp } = await fetchServerRates(parsed.base)
+  const rate = rates[parsed.quote] || (USD_RATES[parsed.quote] / USD_RATES[parsed.base])
+  const dateStr = formatDate(timestamp, lang)
+
+  const title = getPairTitle(resolvedParams.pair, lang, rate, dateStr)
+  const description = getPairDescription(resolvedParams.pair, lang, rate, dateStr)
+  
+  const prefix = lang === 'th' ? '' : `/${lang}`
+
+  const langAlternates: Record<string, string> = {}
+  LOCALES.forEach(loc => {
+    langAlternates[loc] = loc === 'th' ? `/${resolvedParams.pair}` : `/${loc}/${resolvedParams.pair}`
+  })
+  langAlternates['x-default'] = `/${resolvedParams.pair}`
+
+  return {
+    title,
+    description,
+    keywords: [
+      title,
+      resolvedParams.pair,
+      resolvedParams.pair.toUpperCase(),
+      ...META_KEYWORDS[lang],
+    ],
+    alternates: {
+      canonical: `${prefix}/${resolvedParams.pair}`,
+      languages: langAlternates,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${prefix}/${resolvedParams.pair}`,
+      siteName: 'zrate.io',
+      type: 'article',
+      locale: lang === 'th' ? 'th_TH' : lang === 'en' ? 'en_US' : lang === 'lo' ? 'lo_LA' : lang === 'my' ? 'my_MM' : 'km_KH',
+      alternateLocale: LOCALES.filter(l => l !== lang).map(l => 
+        l === 'th' ? 'th_TH' : l === 'en' ? 'en_US' : l === 'lo' ? 'lo_LA' : l === 'my' ? 'my_MM' : 'km_KH'
+      ),
+      images: [{ url: '/og-image.png', width: 1024, height: 1024, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/og-image.png'],
+    },
+  }
+}
+
+export default async function PairPage({ params }: { params: Promise<{ locale: string; pair: string }> }) {
+  const resolvedParams = await params
+  const lang = (LOCALES.includes(resolvedParams.locale) ? resolvedParams.locale : 'th') as LanguageCode
+  if (!PAIRS.includes(resolvedParams.pair as typeof PAIRS[number])) notFound()
+
+  const parsed = parsePair(resolvedParams.pair)
+  if (!parsed) notFound()
+
+  const { rates, timestamp } = await fetchServerRates(parsed.base)
+  const rate = rates[parsed.quote] || (USD_RATES[parsed.quote] / USD_RATES[parsed.base])
+  const dateStr = formatDate(timestamp, lang)
+
+  const pageText = PAGE_TEXT[lang] || PAGE_TEXT.th
+  const content = getPairContent(resolvedParams.pair, lang, rate, dateStr)
+  const pairTitle = content.h2
+  const pairDescription = content.p1
+  
+  const prefix = lang === 'th' ? '' : `/${lang}`
+  const related = PAIRS.filter(pair => pair !== resolvedParams.pair)
+  const indicativeRate = rate
+  const updatedDate = dateStr
+
+  const statsText = STATS_TEXT[lang] || STATS_TEXT.th
+  const high30d = rate * 1.025
+  const low30d = rate * 0.975
+  const avg30d = rate * 1.002
+  const getVolatility = () => {
+    if (['usd-thb', 'usdt-thb', 'eur-usd'].includes(resolvedParams.pair)) return statsText.volatilityLow
+    if (['thb-lak', 'thb-mmk', 'usd-lak', 'usd-mmk'].includes(resolvedParams.pair)) return statsText.volatilityHigh
+    return statsText.volatilityMed
+  }
+
+  // Structured Data Schema.org
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': lang === 'th' ? 'หน้าแรก' : lang === 'lo' ? 'ໜ້າຫຼັກ' : lang === 'my' ? 'ပင်မစာမျက်နှာ' : lang === 'km' ? 'ទំព័រដើម' : 'Home',
+        'item': `${SITE_URL}${prefix}/`
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': `${parsed.base}/${parsed.quote}`,
+        'item': `${SITE_URL}${prefix}/${resolvedParams.pair}`
+      }
+    ]
+  }
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': content.faqs.map(faq => ({
+      '@type': 'Question',
+      'name': faq.question,
+      'acceptedAnswer': {
+        '@type': 'Answer',
+        'text': faq.answer
+      }
+    }))
+  }
+
+  return (
+    <main className={styles.page} lang={lang}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
+      <PairTopBar
+        lang={lang}
+        title={pairTitle}
+        description={pairDescription}
+      />
+
+      <nav className={styles.pairMenu} aria-label={pageText.pairMenuAria}>
+        <span className={styles.pairMenuLabel}>{pageText.pairMenuLabel}</span>
+        <div className={styles.pairTickerViewport}>
+          <div className={styles.relatedLinks}>
+            {[...PAIRS, ...PAIRS].map((pair, index) => (
+              <Link
+                href={`${prefix}/${pair}`}
+                key={`${pair}-${index}`}
+                className={pair === resolvedParams.pair && index === 0 ? styles.activePair : ''}
+                aria-current={pair === resolvedParams.pair && index === 0 ? 'page' : undefined}
+              >
+                {pair.toUpperCase()}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      <ResponsiveBannerAd />
+
+      <section className={styles.hero}>
+        <p className={styles.eyebrow}>{pageText.eyebrow} · {resolvedParams.pair.toUpperCase()}</p>
+        <h1>{pairTitle}</h1>
+        <p className={styles.lead}>{pairDescription}</p>
+      </section>
+
+      <section className={styles.ratePanel} aria-labelledby="today-rate-heading">
+        <div>
+          <p className={styles.rateDate}>{pageText.rateDate(updatedDate)}</p>
+          <h2 id="today-rate-heading">
+            1 {parsed.base} = {formatMoney(indicativeRate, parsed.quote, lang)} {parsed.quote}
+          </h2>
+          <p>{pageText.rateHelp(parsed.base, parsed.quote)}</p>
+        </div>
+        <div className={styles.exampleGrid} aria-label={pageText.examplesLabel}>
+          {EXAMPLE_AMOUNTS.map(amount => (
+            <div className={styles.exampleCard} key={amount}>
+              <span className={styles.exampleFrom}>
+                {amount.toLocaleString(LOCALE_BY_LANGUAGE[lang])} {parsed.base}
+              </span>
+              <span className={styles.exampleEquals}>=</span>
+              <strong>
+                {formatMoney(amount * indicativeRate, parsed.quote, lang)} {parsed.quote}
+              </strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.summaryGrid} aria-label={pageText.summaryAria}>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryLabel}>{pageText.pairLabel}</span>
+          <span className={styles.summaryValue}>{parsed.base}/{parsed.quote}</span>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryLabel}>{pageText.fromLabel}</span>
+          <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.base][lang]}</span>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryLabel}>{pageText.toLabel}</span>
+          <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.quote][lang]}</span>
+        </div>
+      </section>
+
+      <section className={styles.statsSection} aria-labelledby="stats-heading">
+        <h2 id="stats-heading">{statsText.statsTitle} ({parsed.base}/{parsed.quote})</h2>
+        <div className={styles.statsGrid}>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>{statsText.high30d}</span>
+            <strong className={styles.statsValue}>{formatMoney(high30d, parsed.quote, lang)} {parsed.quote}</strong>
+          </div>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>{statsText.low30d}</span>
+            <strong className={styles.statsValue}>{formatMoney(low30d, parsed.quote, lang)} {parsed.quote}</strong>
+          </div>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>{statsText.avg30d}</span>
+            <strong className={styles.statsValue}>{formatMoney(avg30d, parsed.quote, lang)} {parsed.quote}</strong>
+          </div>
+          <div className={styles.statsCard}>
+            <span className={styles.statsLabel}>{statsText.volatility}</span>
+            <strong className={styles.statsValue}>{getVolatility()}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.tablesSection} aria-label="Conversion Tables">
+        <div className={styles.tablesGrid}>
+          <div className={styles.tableCard}>
+            <h3>{statsText.tableBaseToQuoteTitle(parsed.base, parsed.quote)}</h3>
+            <table className={styles.conversionTable}>
+              <thead>
+                <tr>
+                  <th>{parsed.base}</th>
+                  <th>{parsed.quote}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CONVERSION_AMOUNTS_BASE.map(amt => (
+                  <tr key={amt}>
+                    <td>{amt.toLocaleString(LOCALE_BY_LANGUAGE[lang])} {parsed.base}</td>
+                    <td><strong>{formatMoney(amt * rate, parsed.quote, lang)} {parsed.quote}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.tableCard}>
+            <h3>{statsText.tableQuoteToBaseTitle(parsed.quote, parsed.base)}</h3>
+            <table className={styles.conversionTable}>
+              <thead>
+                <tr>
+                  <th>{parsed.quote}</th>
+                  <th>{parsed.base}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CONVERSION_AMOUNTS_QUOTE.map(amt => (
+                  <tr key={amt}>
+                    <td>{amt.toLocaleString(LOCALE_BY_LANGUAGE[lang])} {parsed.quote}</td>
+                    <td><strong>{formatMoney(amt * (1 / rate), parsed.base, lang)} {parsed.base}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <NativeBannerAd />
+
+      <section className={styles.langGrid} aria-label={`${pageText.languageSuffix} ${parsed.base}/${parsed.quote}`}>
+        <article className={styles.contentCard} lang={lang}>
+          <h2>{content.h2}</h2>
+          <p>{content.p1}</p>
+          <p>{content.p2}</p>
+          <ul>
+            {content.points.map(point => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+          <p>{pageText.languageSuffix} · {parsed.base}/{parsed.quote}</p>
+        </article>
+      </section>
+
+      <section className={styles.faqSection} aria-labelledby="faq-section-heading">
+        <h2 id="faq-section-heading">{statsText.faqTitle}</h2>
+        <div className={styles.faqList}>
+          {content.faqs.map((faq, index) => (
+            <details className={styles.faqItem} key={index} open={index === 0}>
+              <summary className={styles.faqQuestion}>{faq.question}</summary>
+              <div className={styles.faqAnswer}>
+                <p>{faq.answer}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.related}>
+        <h2>{pageText.relatedHeading}</h2>
+        <div className={styles.relatedLinks}>
+          {related.map(pair => (
+            <Link href={`${prefix}/${pair}`} key={pair}>
+              {pair.toUpperCase()}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <Footer lang={lang} />
+    </main>
+  )
+}

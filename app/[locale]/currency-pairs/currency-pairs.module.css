@@ -1,0 +1,346 @@
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad) 56px;
+}
+
+.contentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 18px;
+}
+
+/* ===== SPLIT HERO LAYOUT ===== */
+.heroLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .heroLayout {
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 40px;
+  }
+}
+
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.heroRight {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--accent-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(14, 165, 233, 0.08);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 850;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.description {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ink-secondary);
+  font-weight: 400;
+  text-wrap: pretty;
+  margin: 0;
+}
+
+.imageCard {
+  background: var(--surface-glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.imageCard img {
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+/* ===== SEARCH AND FILTERS ===== */
+.searchContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.searchInputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-family: var(--font-ui);
+  transition: all 0.15s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--ink-dim);
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterBtn:hover {
+  border-color: var(--border-hover);
+  color: var(--ink);
+}
+
+.filterBtnActive {
+  background: var(--accent);
+  color: var(--ink-inverse);
+  border-color: transparent;
+}
+
+.filterBtnActive:hover {
+  color: var(--ink-inverse);
+}
+
+/* ===== DIRECTORY COLUMN LAYOUT ===== */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeading {
+  font-size: 1.32rem;
+  font-weight: 780;
+  color: var(--ink);
+  margin: 0;
+}
+
+.directoryGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .directoryGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.directoryColumn {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.directoryColumn:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.columnTitle {
+  font-size: 1.05rem;
+  font-weight: 780;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin: 0;
+}
+
+.pairsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pairItemLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.pairItemLink:hover {
+  border-color: var(--border-hover);
+  background-color: var(--bg-elevated);
+  transform: translateX(2px);
+  text-decoration: none;
+}
+
+.flagRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flagEmoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.arrowSeparator {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.pairItemText {
+  font-size: 0.9rem;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.pairItemName {
+  font-size: 0.75rem;
+  color: var(--ink-dim);
+  display: block;
+  margin-top: 2px;
+}
+
+.pairItemArrow {
+  width: 14px;
+  height: 14px;
+  color: var(--ink-dim);
+}
+
+/* ===== INTRO CARD ===== */
+.introCard {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.paragraphs p {
+  color: var(--ink-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--page-pad) 40px;
+  }
+
+  .contentSection {
+    gap: 24px;
+  }
+
+  .directoryGrid {
+    gap: 20px;
+  }
+
+  .directoryColumn {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 1.85rem;
+  }
+
+  .imageCard {
+    max-width: 280px;
+  }
+}
