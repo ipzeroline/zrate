@@ -50,8 +50,7 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /_next/
-Disallow: /static/
+Disallow: /node_modules/
 
 # ===== Crawl Rate =====
 Crawl-delay: 1

@@ -5,11 +5,14 @@
   <!-- หน้าหลัก -->
   <url>
     <loc>https://zrate.io/</loc>
-    <lastmod>2026-05-02</lastmod>
+    <lastmod>2026-06-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="th" href="https://zrate.io/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://zrate.io/"/>
+    <xhtml:link rel="alternate" hreflang="lo" href="https://zrate.io/"/>
+    <xhtml:link rel="alternate" hreflang="my" href="https://zrate.io/"/>
+    <xhtml:link rel="alternate" hreflang="km" href="https://zrate.io/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://zrate.io/"/>
   </url>
 

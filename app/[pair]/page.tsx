@@ -1,14 +1,33 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import type { Metadata } from 'next'
 import { NativeBannerAd, ResponsiveBannerAd } from '../components/AdsterraAds'
+import { PairTopBar } from './PairTopBar'
 import styles from './page.module.css'
 
 type CurrencyCode = 'USD' | 'EUR' | 'USDT' | 'THB' | 'LAK' | 'MMK' | 'KHR' | 'JPY' | 'CNY' | 'SGD' | 'KRW'
 type LanguageCode = 'th' | 'en' | 'lo' | 'my' | 'km'
 
 const SITE_URL = 'https://zrate.io'
+const LANGUAGE_COOKIE = 'zrate-language'
+const LOCALE_BY_LANGUAGE: Record<LanguageCode, string> = {
+  th: 'th-TH',
+  en: 'en-US',
+  lo: 'lo-LA',
+  my: 'my-MM',
+  km: 'km-KH',
+}
+
+const LANGUAGE_ALIASES: Record<string, LanguageCode> = {
+  th: 'th',
+  en: 'en',
+  la: 'lo',
+  lo: 'lo',
+  my: 'my',
+  kh: 'km',
+  km: 'km',
+}
 
 const PAIRS = [
   'usd-thb',
@@ -51,12 +70,98 @@ const SPECIAL_THAI_TITLES: Record<string, string> = {
   'usdt-thb': 'USDT เท่ากับกี่บาทวันนี้',
 }
 
-const LANGUAGE_LABELS: Record<LanguageCode, string> = {
-  th: 'ภาษาไทย',
-  en: 'English',
-  lo: 'ພາສາລາວ',
-  my: 'မြန်မာ',
-  km: 'ភាសាខ្មែរ',
+const PAGE_TEXT: Record<LanguageCode, {
+  pairMenuLabel: string
+  pairMenuAria: string
+  eyebrow: string
+  rateDate: (date: string) => string
+  rateHelp: (base: CurrencyCode, quote: CurrencyCode) => string
+  examplesLabel: string
+  summaryAria: string
+  pairLabel: string
+  fromLabel: string
+  toLabel: string
+  relatedHeading: string
+  languageSuffix: string
+}> = {
+  th: {
+    pairMenuLabel: 'คู่เงินยอดนิยม',
+    pairMenuAria: 'เมนูคู่สกุลเงินยอดนิยม',
+    eyebrow: 'อัตราแลกเปลี่ยนวันนี้',
+    rateDate: date => `เรทอ้างอิง ณ วันที่ ${date}`,
+    rateHelp: (base, quote) => `ตัวอย่างนี้ช่วยให้เห็นภาพการแปลงค่าเงิน ${base} เป็น ${quote} ในหน้าเดียว ก่อนกดกลับไปใช้ตัวแปลงค่าเงินจริงบน zrate.io`,
+    examplesLabel: 'ตัวอย่างการแปลงค่าเงิน',
+    summaryAria: 'สรุปคู่สกุลเงิน',
+    pairLabel: 'คู่สกุลเงิน',
+    fromLabel: 'จากสกุลเงิน',
+    toLabel: 'เป็นสกุลเงิน',
+    relatedHeading: 'คู่สกุลเงินยอดนิยมอื่นๆ ใน sitemap',
+    languageSuffix: 'ภาษาไทย',
+  },
+  en: {
+    pairMenuLabel: 'Popular pairs',
+    pairMenuAria: 'Popular currency-pair menu',
+    eyebrow: 'Today’s exchange rate',
+    rateDate: date => `Reference rate on ${date}`,
+    rateHelp: (base, quote) => `This example shows a quick ${base} to ${quote} conversion before using the live currency converter on zrate.io.`,
+    examplesLabel: 'Currency conversion examples',
+    summaryAria: 'Currency pair summary',
+    pairLabel: 'Currency pair',
+    fromLabel: 'From currency',
+    toLabel: 'To currency',
+    relatedHeading: 'Other popular currency pairs in the sitemap',
+    languageSuffix: 'English',
+  },
+  lo: {
+    pairMenuLabel: 'ຄູ່ເງິນຍອດນິຍົມ',
+    pairMenuAria: 'ເມນູຄູ່ເງິນຍອດນິຍົມ',
+    eyebrow: 'ອັດຕາແລກປ່ຽນມື້ນີ້',
+    rateDate: date => `ອັດຕາອ້າງອີງ ວັນທີ ${date}`,
+    rateHelp: (base, quote) => `ຕົວຢ່າງນີ້ຊ່ວຍໃຫ້ເຫັນການແປງ ${base} ເປັນ ${quote} ກ່ອນກັບໄປໃຊ້ເຄື່ອງມືແປງເງິນສົດໃນ zrate.io.`,
+    examplesLabel: 'ຕົວຢ່າງການແປງເງິນ',
+    summaryAria: 'ສະຫຼຸບຄູ່ເງິນ',
+    pairLabel: 'ຄູ່ເງິນ',
+    fromLabel: 'ຈາກສະກຸນ',
+    toLabel: 'ເປັນສະກຸນ',
+    relatedHeading: 'ຄູ່ເງິນຍອດນິຍົມອື່ນໃນ sitemap',
+    languageSuffix: 'ພາສາລາວ',
+  },
+  my: {
+    pairMenuLabel: 'လူကြိုက်များသော ငွေကြေးအတွဲများ',
+    pairMenuAria: 'လူကြိုက်များသော ငွေကြေးအတွဲ menu',
+    eyebrow: 'ယနေ့ ငွေလဲနှုန်း',
+    rateDate: date => `ကိုးကားနှုန်း ${date}`,
+    rateHelp: (base, quote) => `ဤဥပမာသည် zrate.io ပေါ်ရှိ live converter ကိုမသုံးမီ ${base} မှ ${quote} သို့ ပြောင်းလဲတွက်ချက်မှုကို အမြန်မြင်နိုင်စေသည်။`,
+    examplesLabel: 'ငွေကြေးပြောင်းလဲမှုဥပမာများ',
+    summaryAria: 'ငွေကြေးအတွဲ အကျဉ်းချုပ်',
+    pairLabel: 'ငွေကြေးအတွဲ',
+    fromLabel: 'မူရင်းငွေကြေး',
+    toLabel: 'ပြောင်းမည့်ငွေကြေး',
+    relatedHeading: 'sitemap ထဲရှိ အခြားလူကြိုက်များသော ငွေကြေးအတွဲများ',
+    languageSuffix: 'မြန်မာ',
+  },
+  km: {
+    pairMenuLabel: 'គូរូបិយប័ណ្ណពេញនិយម',
+    pairMenuAria: 'ម៉ឺនុយគូរូបិយប័ណ្ណពេញនិយម',
+    eyebrow: 'អត្រាប្តូរប្រាក់ថ្ងៃនេះ',
+    rateDate: date => `អត្រាយោង ថ្ងៃទី ${date}`,
+    rateHelp: (base, quote) => `ឧទាហរណ៍នេះបង្ហាញការបម្លែង ${base} ទៅ ${quote} មុនពេលត្រឡប់ទៅប្រើ live converter នៅ zrate.io។`,
+    examplesLabel: 'ឧទាហរណ៍ការបម្លែងរូបិយប័ណ្ណ',
+    summaryAria: 'សង្ខេបគូរូបិយប័ណ្ណ',
+    pairLabel: 'គូរូបិយប័ណ្ណ',
+    fromLabel: 'ពីរូបិយប័ណ្ណ',
+    toLabel: 'ទៅរូបិយប័ណ្ណ',
+    relatedHeading: 'គូរូបិយប័ណ្ណពេញនិយមផ្សេងទៀតក្នុង sitemap',
+    languageSuffix: 'ភាសាខ្មែរ',
+  },
+}
+
+const META_KEYWORDS: Record<LanguageCode, string[]> = {
+  th: ['อัตราแลกเปลี่ยนวันนี้', 'แปลงค่าเงิน', 'ค่าเงินวันนี้'],
+  en: ['exchange rate today', 'currency converter', 'live exchange rate'],
+  lo: ['ອັດຕາແລກປ່ຽນມື້ນີ້', 'ແປງສະກຸນເງິນ', 'ຄ່າເງິນມື້ນີ້'],
+  my: ['ယနေ့ငွေလဲနှုန်း', 'ငွေကြေးပြောင်း', 'တိုက်ရိုက်ငွေလဲနှုန်း'],
+  km: ['អត្រាប្តូរប្រាក់ថ្ងៃនេះ', 'បម្លែងរូបិយប័ណ្ណ', 'អត្រាប្តូរប្រាក់ផ្ទាល់'],
 }
 
 const USD_RATES: Record<CurrencyCode, number> = {
@@ -99,15 +204,36 @@ function getIndicativeRate(base: CurrencyCode, quote: CurrencyCode) {
   return USD_RATES[quote] / USD_RATES[base]
 }
 
-function formatMoney(value: number, currency: CurrencyCode) {
-  if (value >= 1000000) return value.toLocaleString('th-TH', { maximumFractionDigits: 0 })
-  if (value >= 1000) return value.toLocaleString('th-TH', { maximumFractionDigits: 2 })
-  if (value >= 1) return value.toLocaleString('th-TH', { maximumFractionDigits: 4 })
+function normalizeLanguage(value?: string | null): LanguageCode {
+  return LANGUAGE_ALIASES[value ?? ''] ?? 'th'
+}
+
+function getSelectedLanguage(): LanguageCode {
+  return normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value)
+}
+
+function getPairTitle(pair: string, lang: LanguageCode) {
+  const content = getContent(pair, lang)
+  if (!content) return getThaiTitle(pair)
+  return lang === 'th' ? getThaiTitle(pair) : content.h2
+}
+
+function getPairDescription(pair: string, lang: LanguageCode) {
+  const content = getContent(pair, lang)
+  if (!content) return getDescription(pair)
+  return lang === 'th' ? getDescription(pair) : content.p1
+}
+
+function formatMoney(value: number, currency: CurrencyCode, lang: LanguageCode) {
+  const locale = LOCALE_BY_LANGUAGE[lang]
+  if (value >= 1000000) return value.toLocaleString(locale, { maximumFractionDigits: 0 })
+  if (value >= 1000) return value.toLocaleString(locale, { maximumFractionDigits: 2 })
+  if (value >= 1) return value.toLocaleString(locale, { maximumFractionDigits: 4 })
   return value.toFixed(6)
 }
 
-function formatDate() {
-  return new Date().toLocaleDateString('th-TH', {
+function formatDate(lang: LanguageCode) {
+  return new Date().toLocaleDateString(LOCALE_BY_LANGUAGE[lang], {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -179,6 +305,7 @@ function getContent(pair: string, lang: LanguageCode) {
   return copy[lang]
 }
 
+export const dynamic = 'force-dynamic'
 export const dynamicParams = false
 
 export function generateStaticParams() {
@@ -188,8 +315,9 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { pair: string } }): Metadata {
   if (!PAIRS.includes(params.pair as typeof PAIRS[number])) return {}
 
-  const title = getThaiTitle(params.pair)
-  const description = getDescription(params.pair)
+  const lang = getSelectedLanguage()
+  const title = getPairTitle(params.pair, lang)
+  const description = getPairDescription(params.pair, lang)
 
   return {
     title,
@@ -198,10 +326,7 @@ export function generateMetadata({ params }: { params: { pair: string } }): Meta
       title,
       params.pair,
       params.pair.toUpperCase(),
-      'อัตราแลกเปลี่ยนวันนี้',
-      'แปลงค่าเงิน',
-      'currency converter',
-      'exchange rate today',
+      ...META_KEYWORDS[lang],
     ],
     alternates: {
       canonical: `/${params.pair}`,
@@ -229,32 +354,34 @@ export default function PairPage({ params }: { params: { pair: string } }) {
   const parsed = parsePair(params.pair)
   if (!parsed) notFound()
 
-  const thaiTitle = getThaiTitle(params.pair)
+  const lang = getSelectedLanguage()
+  const pageText = PAGE_TEXT[lang]
+  const content = getContent(params.pair, lang)
+  if (!content) notFound()
+
+  const pairTitle = getPairTitle(params.pair, lang)
+  const pairDescription = getPairDescription(params.pair, lang)
   const related = PAIRS.filter(pair => pair !== params.pair)
   const indicativeRate = getIndicativeRate(parsed.base, parsed.quote)
-  const updatedDate = formatDate()
+  const updatedDate = formatDate(lang)
 
   return (
-    <main className={styles.page}>
-      <nav className={styles.nav} aria-label="Navigation">
-        <Link className={styles.brand} href="/">
-          <Image src="/zrate.png" alt="zrate.io" width={42} height={42} priority />
-          <span>zrate.io</span>
-        </Link>
-        <Link className={styles.homeLink} href="/">
-          กลับไปหน้าอัตราแลกเปลี่ยนสด
-        </Link>
-      </nav>
+    <main className={styles.page} lang={lang}>
+      <PairTopBar
+        lang={lang}
+        title={pairTitle}
+        description={pairDescription}
+      />
 
-      <nav className={styles.pairMenu} aria-label="เมนูคู่สกุลเงินยอดนิยม">
-        <span className={styles.pairMenuLabel}>คู่เงินยอดนิยม</span>
+      <nav className={styles.pairMenu} aria-label={pageText.pairMenuAria}>
+        <span className={styles.pairMenuLabel}>{pageText.pairMenuLabel}</span>
         <div className={styles.pairTickerViewport}>
           <div className={styles.relatedLinks}>
             {[...PAIRS, ...PAIRS].map((pair, index) => (
               <Link
                 href={`/${pair}`}
                 key={`${pair}-${index}`}
-                className={pair === params.pair ? styles.activePair : ''}
+                className={pair === params.pair && index === 0 ? styles.activePair : ''}
                 aria-current={pair === params.pair && index === 0 ? 'page' : undefined}
               >
                 {pair.toUpperCase()}
@@ -267,77 +394,67 @@ export default function PairPage({ params }: { params: { pair: string } }) {
       <ResponsiveBannerAd />
 
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>อัตราแลกเปลี่ยนวันนี้ • {params.pair.toUpperCase()}</p>
-        <h1>{thaiTitle}</h1>
-        <p className={styles.lead}>{getDescription(params.pair)}</p>
+        <p className={styles.eyebrow}>{pageText.eyebrow} · {params.pair.toUpperCase()}</p>
+        <h1>{pairTitle}</h1>
+        <p className={styles.lead}>{pairDescription}</p>
       </section>
 
       <section className={styles.ratePanel} aria-labelledby="today-rate-heading">
         <div>
-          <p className={styles.rateDate}>เรทอ้างอิง ณ วันที่ {updatedDate}</p>
+          <p className={styles.rateDate}>{pageText.rateDate(updatedDate)}</p>
           <h2 id="today-rate-heading">
-            1 {parsed.base} = {formatMoney(indicativeRate, parsed.quote)} {parsed.quote}
+            1 {parsed.base} = {formatMoney(indicativeRate, parsed.quote, lang)} {parsed.quote}
           </h2>
-          <p>
-            ตัวอย่างนี้ช่วยให้เห็นภาพการแปลงค่าเงิน {parsed.base} เป็น {parsed.quote} ในหน้าเดียว
-            ก่อนกดกลับไปใช้ตัวแปลงค่าเงินจริงบน zrate.io
-          </p>
+          <p>{pageText.rateHelp(parsed.base, parsed.quote)}</p>
         </div>
-        <div className={styles.exampleGrid} aria-label="ตัวอย่างการแปลงค่าเงิน">
+        <div className={styles.exampleGrid} aria-label={pageText.examplesLabel}>
           {EXAMPLE_AMOUNTS.map(amount => (
             <div className={styles.exampleCard} key={amount}>
               <span className={styles.exampleFrom}>
-                {amount.toLocaleString('th-TH')} {parsed.base}
+                {amount.toLocaleString(LOCALE_BY_LANGUAGE[lang])} {parsed.base}
               </span>
               <span className={styles.exampleEquals}>=</span>
               <strong>
-                {formatMoney(amount * indicativeRate, parsed.quote)} {parsed.quote}
+                {formatMoney(amount * indicativeRate, parsed.quote, lang)} {parsed.quote}
               </strong>
             </div>
           ))}
         </div>
       </section>
 
-      <section className={styles.summaryGrid} aria-label="Currency pair summary">
+      <section className={styles.summaryGrid} aria-label={pageText.summaryAria}>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>คู่สกุลเงิน</span>
+          <span className={styles.summaryLabel}>{pageText.pairLabel}</span>
           <span className={styles.summaryValue}>{parsed.base}/{parsed.quote}</span>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>จากสกุลเงิน</span>
-          <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.base].th}</span>
+          <span className={styles.summaryLabel}>{pageText.fromLabel}</span>
+          <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.base][lang]}</span>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.summaryLabel}>เป็นสกุลเงิน</span>
-          <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.quote].th}</span>
+          <span className={styles.summaryLabel}>{pageText.toLabel}</span>
+          <span className={styles.summaryValue}>{CURRENCY_NAMES[parsed.quote][lang]}</span>
         </div>
       </section>
 
       <NativeBannerAd />
 
-      <section className={styles.langGrid} aria-label="SEO content in five languages">
-        {(['th', 'en', 'lo', 'my', 'km'] as LanguageCode[]).map(lang => {
-          const content = getContent(params.pair, lang)
-          if (!content) return null
-
-          return (
-            <article className={styles.contentCard} key={lang} lang={lang}>
-              <h2>{content.h2}</h2>
-              <p>{content.p1}</p>
-              <p>{content.p2}</p>
-              <ul>
-                {content.points.map(point => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-              <p>{LANGUAGE_LABELS[lang]} • {parsed.base}/{parsed.quote}</p>
-            </article>
-          )
-        })}
+      <section className={styles.langGrid} aria-label={`${pageText.languageSuffix} ${parsed.base}/${parsed.quote}`}>
+        <article className={styles.contentCard} lang={lang}>
+          <h2>{content.h2}</h2>
+          <p>{content.p1}</p>
+          <p>{content.p2}</p>
+          <ul>
+            {content.points.map(point => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+          <p>{pageText.languageSuffix} · {parsed.base}/{parsed.quote}</p>
+        </article>
       </section>
 
       <section className={styles.related}>
-        <h2>คู่สกุลเงินยอดนิยมอื่นๆ ใน sitemap</h2>
+        <h2>{pageText.relatedHeading}</h2>
         <div className={styles.relatedLinks}>
           {related.map(pair => (
             <Link href={`/${pair}`} key={pair}>

@@ -1,18 +1,80 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { cookies } from 'next/headers'
 import './globals.css'
 
 const siteUrl = 'https://zrate.io'
-const siteDescriptionTh = 'เช็กอัตราแลกเปลี่ยนเงินวันนี้แบบเรียลไทม์ แปลงค่าเงินบาท ดอลลาร์ ยูโร USDT กว่า 40 สกุลเงิน อัปเดตทุก 60 วินาที'
-const siteDescriptionEn = 'Check live currency exchange rates and convert Thai baht, US dollars, euros, USDT and 40+ currencies, updated every 60 seconds.'
+const siteDescriptionTh = 'เช็กอัตราแลกเปลี่ยนเงินวันนี้และแปลงค่าเงินออนไลน์แบบเรียลไทม์ ดู USD/THB, USDT/THB, EUR, JPY, LAK, MMK, KHR และกว่า 40 สกุลเงิน อัปเดตทุก 60 วินาที'
+const siteDescriptionEn = 'Check today\'s live exchange rates and convert Thai baht, US dollars, USDT, euros, yen, Lao kip, Myanmar kyat, Cambodian riel and 40+ currencies.'
 const siteDescriptionLo = 'ກວດເບິ່ງອັດຕາແລກປ່ຽນເງິນແບບສົດ ແປງເງິນບາດ ໂດລາ ເອີໂຣ USDT ແລະຫຼາຍກວ່າ 40 ສະກຸນ ອັບເດດທຸກ 60 ວິນາທີ'
 const siteDescriptionMy = 'ယနေ့ ငွေလဲနှုန်းများကို အချိန်နှင့်တပြေးညီ စစ်ဆေးပြီး ဘတ်၊ ဒေါ်လာ၊ ယူရို၊ USDT နှင့် ငွေကြေး 40 ကျော်ကို 60 စက္ကန့်တိုင်း အပ်ဒိတ်ဖြင့် ပြောင်းလဲတွက်ချက်ပါ။'
 const siteDescriptionKm = 'ពិនិត្យអត្រាប្តូរប្រាក់ថ្ងៃនេះតាមពេលវេលាពិត បម្លែងប្រាក់បាត ដុល្លារ អឺរ៉ូ USDT និងរូបិយប័ណ្ណជាង 40 អាប់ដេតរៀងរាល់ 60 វិនាទី'
+const languageCookie = 'zrate-language'
+const htmlLanguageMap: Record<string, string> = {
+  th: 'th',
+  en: 'en',
+  la: 'lo',
+  lo: 'lo',
+  my: 'my',
+  kh: 'km',
+  km: 'km',
+}
+
+function getHtmlLanguage() {
+  return htmlLanguageMap[cookies().get(languageCookie)?.value ?? ''] ?? 'th'
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${siteUrl}/#organization`,
+      name: 'zrate.io',
+      url: siteUrl,
+      logo: `${siteUrl}/zrate.png`,
+      sameAs: [siteUrl],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      url: siteUrl,
+      name: 'zrate.io',
+      alternateName: ['Zrate', 'อัตราแลกเปลี่ยนเงินวันนี้', 'Live exchange rates'],
+      description: siteDescriptionTh,
+      inLanguage: ['th', 'en', 'lo', 'my', 'km'],
+      publisher: { '@id': `${siteUrl}/#organization` },
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': `${siteUrl}/#currency-converter`,
+      name: 'zrate.io currency converter',
+      url: siteUrl,
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'Web',
+      isAccessibleForFree: true,
+      description: siteDescriptionEn,
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+      featureList: [
+        'Live exchange rates',
+        'Thai baht exchange rate',
+        'US dollar to Thai baht converter',
+        'USDT to THB converter',
+        'Regional currencies for Thailand, Laos, Myanmar and Cambodia',
+      ],
+      publisher: { '@id': `${siteUrl}/#organization` },
+    },
+  ],
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'zrate.io — อัตราแลกเปลี่ยนเงินวันนี้',
+    default: 'อัตราแลกเปลี่ยนเงินวันนี้ แปลงค่าเงิน USD THB USDT | zrate.io',
     template: '%s | zrate.io',
   },
   description: siteDescriptionTh,
@@ -27,6 +89,13 @@ export const metadata: Metadata = {
     'แปลงค่าเงิน',
     'แปลงสกุลเงิน',
     'USD THB',
+    'USD เป็น บาท',
+    'ดอลลาร์ บาท',
+    'USDT THB',
+    'USDT บาท',
+    'THB LAK',
+    'THB MMK',
+    'THB KHR',
     'exchange rate',
     'live exchange rates',
     'currency converter',
@@ -45,9 +114,17 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: '/',
+    languages: {
+      th: '/',
+      en: '/',
+      lo: '/',
+      my: '/',
+      km: '/',
+      'x-default': '/',
+    },
   },
   openGraph: {
-    title: 'zrate.io — อัตราแลกเปลี่ยนเงินวันนี้',
+    title: 'อัตราแลกเปลี่ยนเงินวันนี้ แปลงค่าเงิน USD THB USDT | zrate.io',
     description: siteDescriptionTh,
     url: '/',
     siteName: 'zrate.io',
@@ -65,7 +142,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'zrate.io — อัตราแลกเปลี่ยนเงินวันนี้',
+    title: 'อัตราแลกเปลี่ยนเงินวันนี้ แปลงค่าเงิน USD THB USDT | zrate.io',
     description: siteDescriptionTh,
     images: ['/og-image.png'],
   },
@@ -76,7 +153,15 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
+  category: 'finance',
   other: {
     'description:th': siteDescriptionTh,
     'description:en': siteDescriptionEn,
@@ -93,7 +178,29 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th">
+    <html lang={getHtmlLanguage()} suppressHydrationWarning>
+      <head>
+        {/* FOUC prevention: set data-theme before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('zrate-theme');
+                  if (!theme) {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-XSDY5FQZQ0"
