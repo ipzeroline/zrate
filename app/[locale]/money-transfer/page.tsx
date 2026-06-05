@@ -599,216 +599,182 @@ export default async function MoneyTransferPage({ params }: { params: Promise<{ 
       </div>
 
       <section className={styles.contentSection}>
-        <div className={styles.gridMain}>
-          {/* LEFT COLUMN: Main content, currency cards, and comparisons */}
-          <div className={styles.leftColumn}>
-            {/* Hero Section */}
-            <div className={styles.heroSection}>
+        <div className={styles.mainContentFlow}>
+          {/* Hero Section (Split into content and visual on desktop) */}
+          <div className={styles.heroSection}>
+            <div className={styles.heroContent}>
               <span className={styles.eyebrow}>{text.eyebrow} · อัปเดต {lastUpdatedMonthYear}</span>
               <h1 className={styles.title}>{text.heading}</h1>
               <p className={styles.description}>{text.body}</p>
             </div>
-
-            {/* Remittance calculator pairs shortcuts */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>{text.cardsHeading}</h2>
-              <div className={styles.pairsGrid}>
-                {text.cards.map(card => (
-                  <Link
-                    className={styles.pairCard}
-                    href={localizePath(lang, card.href || PATH)}
-                    key={card.title}
-                  >
-                    <h3 className={styles.pairTitle}>{card.title}</h3>
-                    <p className={styles.pairDesc}>{card.body}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* REMITTANCE PROVIDERS COMPARISON TABLE */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                {lang === 'th' ? `เครื่องมือคำนวณและเปรียบเทียบผู้ให้บริการโอนเงินจากไทย`
-                 : lang === 'en' ? `Compare Remittance Providers from Thailand`
-                 : lang === 'lo' ? `ເຄື່ອງມືຄຳນວນ ແລະ ປຽບທຽບຜູ້ໃຫ້ບໍລິການໂອນເງິນ`
-                 : lang === 'my' ? `ထိုင်းနိုင်ငံမှ ငွေလွှဲဝန်ဆောင်မှုလုပ်ငန်းများ တွက်ချက်နှိုင်းယှဉ်မှု`
-                 : `ឧបករណ៍គណនា និងប្រៀបធៀបអ្នកផ្តល់សេវាផ្ទេរប្រាក់ពីថៃ`}
-              </h2>
-              <RemittanceTool lang={lang} rates={rates} />
-            </div>
-
-            {/* Cost estimation formula */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>{text.contentHeading}</h2>
-              <div className={styles.paragraphs} style={{ marginBottom: '18px' }}>
-                {text.paragraphs.map(paragraph => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-              
-              <div className={styles.formulaBox}>
-                <span className={styles.formulaTitle}>{formula.title}</span>
-                <p className={styles.formulaEquation}>{formula.equation}</p>
-                <p className={styles.formulaExplanation}>{formula.note}</p>
-              </div>
-            </div>
-
-            {/* CONCRETE CALCULATION MATH EXAMPLES */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                {lang === 'th' ? 'ตัวอย่างการคำนวณต้นทุนการโอนเงินจริง'
-                 : lang === 'en' ? 'Real-World Remittance Cost Calculation Examples'
-                 : lang === 'lo' ? 'ຕົວຢ່າງການຄຳນວນຕົ້ນທຶນໂອນເງິນຕົວຈິງ'
-                 : lang === 'my' ? 'ငွေလွှဲစရိတ်အမှန်တကယ် တွက်ချက်မှုနမူနာများ'
-                 : 'ឧទាហរណ៍នៃការគណនាថ្លៃសេវាផ្ទេរប្រាក់ពិតប្រាកដ'}
-              </h2>
-              <div className={styles.examplesContainer}>
-                {mathExamples.map((ex, idx) => (
-                  <div key={idx} className={styles.exampleDetailCard}>
-                    <h3>{ex.title}</h3>
-                    <p className={styles.exampleSub}>{ex.sub}</p>
-                    <div className={styles.exampleFormulaBox}>
-                      {ex.formula}
-                    </div>
-                    <div className={styles.exampleDetails}>
-                      {ex.lines.map((line, lIdx) => (
-                        <div key={lIdx} className={styles.exampleLine}>
-                          <span>- {line.split(':')[0]}:</span>
-                          <span className={styles.exampleLineVal}>{line.split(':')[1]}</span>
-                        </div>
-                      ))}
-                      <div className={styles.exampleLineTotal}>
-                        <span>{ex.total.split(':')[0]}:</span>
-                        <span className={styles.exampleTotalVal}>{ex.total.split(':')[1]}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* COUNTRY-SPECIFIC REMITTANCE GUIDES */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                {lang === 'th' ? 'เจาะลึกการโอนเงินรายประเทศ (ไทย ➔ ลาว / เมียนมา / กัมพูชา)'
-                 : lang === 'en' ? 'Country Remittance Guides (Thailand to Laos / Myanmar / Cambodia)'
-                 : lang === 'lo' ? 'ຄູ່ມືໂອນເງິນລາຍປະເທດ (ໄທ ➔ ລາວ / ມຽນມາ / ກຳປູເຈຍ)'
-                 : lang === 'my' ? 'နိုင်ငံအလိုက် ငွေလွှဲလမ်းညွှန်ချက်များ (ထိုင်း ➔ ลาอို / မြန်မာ / ကမ္ဘောဒီးယား)'
-                 : 'មគ្គុទ្ទេសក៍ផ្ទេរប្រាក់តាមប្រទេសនីមួយៗ (ថៃ ➔ ឡាវ / មីយ៉ាន់ម៉ា / កម្ពុជា)'}
-              </h2>
-              <div className={styles.guidesContainer}>
-                {countryGuides.map((guide, idx) => {
-                  const slug = guide.pair.toLowerCase().replace('/', '-')
-                  return (
-                    <div key={idx} className={styles.guideDetailCard}>
-                      <div className={styles.guideDetailHeader}>
-                        <h3 className={styles.guideDetailTitle}>
-                          <span>{guide.flag}</span>
-                          <span>{guide.country}</span>
-                        </h3>
-                        <Link href={localizePath(lang, `/${slug}`)} className={styles.liveRateLink}>
-                          {lang === 'th' ? `ดูเรท ${guide.pair} ล่าสุด` : `Check Live ${guide.pair} Rate`} ➔
-                        </Link>
-                      </div>
-                      <p className={styles.guideDetailText}>{guide.text}</p>
-                      <div className={styles.guideDetailChannels}>
-                        {guide.channels}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* HOW TO CHOOSE STEP-BY-STEP */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                {lang === 'th' ? 'วิธีเลือกช่องทางโอนเงินต่างประเทศให้คุ้มที่สุด'
-                 : lang === 'en' ? 'How to Choose the Best Money Transfer Option'
-                 : lang === 'lo' ? 'ວິທີເລືອກຊ່องທາງໂອນເງິນໃຫ້ຄຸ້ມຄ່າທີ່ສຸດ'
-                 : lang === 'my' ? 'ငွေလွှဲစရိတ် အသက်သာဆုံးလမ်းကြောင်းကို မည်သို့ရွေးချယ်မလဲ'
-                 : 'របៀបជ្រើសរើសច្រកផ្ទេរប្រាក់ឱ្យចំណេញបំផុត'}
-              </h2>
-              <div className={styles.howToGrid}>
-                {howToSteps.map((step, idx) => (
-                  <div key={idx} className={styles.howToStepCard}>
-                    <span className={styles.stepNumber}>{idx + 1}</span>
-                    <div>
-                      <h4 className={styles.stepHeading}>{step.name}</h4>
-                      <p className={styles.stepText}>{step.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ACCORDION FAQ SECTION */}
-            <div className={styles.card}>
-              <h2 className={styles.cardTitle}>
-                {lang === 'th' ? 'คำถามที่พบบ่อยเกี่ยวกับการโอนเงินข้ามประเทศ (FAQ)'
-                 : lang === 'en' ? 'Frequently Asked Questions (FAQ)'
-                 : lang === 'lo' ? 'ຄຳຖາມທີ່ພົບບ່ອຍກ່ຽວກັບການໂອນເງິນ (FAQ)'
-                 : lang === 'my' ? 'ငွေလွှဲခြင်းနှင့်ပတ်သက်၍ မေးလေ့ရှိသောမေးခွန်းများ (FAQ)'
-                 : 'សំណួរដែលសួរញឹកញាប់អំពីការផ្ទេរប្រាក់ (FAQ)'}
-              </h2>
-              <div className={styles.faqList}>
-                {faqs.map((faq, idx) => (
-                  <details key={idx} className={styles.faqItem} open={idx === 0}>
-                    <summary className={styles.faqQuestion}>{faq.question}</summary>
-                    <div className={styles.faqAnswer}>
-                      <p>{faq.answer}</p>
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </div>
-
-            {/* YMYL E-E-A-T TRUST SIGNALS CREDENTIAL BOX */}
-            <div className={styles.eeatContainer}>
-              <div className={styles.eeatHeader}>
-                <div className={styles.eeatField}>
-                  <span className={styles.eeatLabel}>{trust.author}</span>
-                  <span>{trust.authorVal}</span>
-                </div>
-                <div className={styles.eeatField}>
-                  <span className={styles.eeatLabel}>{trust.reviewer}</span>
-                  <span>{trust.reviewerVal}</span>
-                </div>
-                <div className={styles.eeatField}>
-                  <span className={styles.eeatLabel}>{trust.updated}</span>
-                  <span>{lastUpdatedMonthYear}</span>
-                </div>
-              </div>
-              <div className={styles.eeatBody}>
-                <p>{trust.citation}</p>
-                <div className={styles.eeatRefs}>
-                  <span className={styles.eeatRefsTitle}>{trust.refs}</span>
-                  <ul className={styles.eeatRefsList}>
-                    <li><a href="https://krungthai.com/th/personal/cash-transfer/international-transfer/ktb-warp" target="_blank" rel="nofollow noopener noreferrer">Krungthai Bank WARP</a></li>
-                    <li><a href="https://www.baac.or.th" target="_blank" rel="nofollow noopener noreferrer">BAAC Bank Thailand</a></li>
-                    <li><a href="https://www.westernunion.com" target="_blank" rel="nofollow noopener noreferrer">Western Union Fees</a></li>
-                    <li><a href="https://wise.com" target="_blank" rel="nofollow noopener noreferrer">Wise Pricing Index</a></li>
-                    <li><a href="https://www.remitly.com" target="_blank" rel="sponsored noopener noreferrer">Remitly Pricing Schedule</a></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: Sidebar with illustration, quick links, and blog guides */}
-          <div className={styles.rightColumn}>
-            {/* Visual illustration */}
-            <div className={styles.imageWrapper}>
+            <div className={styles.heroIllustration}>
               <Image
                 src="/money-transfer-illustration.png"
                 alt="zrate.io international money transfer & remittance illustration"
-                fill
+                width={280}
+                height={280}
                 priority
-                sizes="(max-width: 1024px) 100vw, 380px"
               />
             </div>
+          </div>
 
+          {/* Remittance calculator pairs shortcuts */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>{text.cardsHeading}</h2>
+            <div className={styles.pairsGrid}>
+              {text.cards.map(card => (
+                <Link
+                  className={styles.pairCard}
+                  href={localizePath(lang, card.href || PATH)}
+                  key={card.title}
+                >
+                  <h3 className={styles.pairTitle}>{card.title}</h3>
+                  <p className={styles.pairDesc}>{card.body}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* REMITTANCE PROVIDERS COMPARISON TABLE (Takes full screen width) */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              {lang === 'th' ? 'เครื่องมือคำนวณและเปรียบเทียบผู้ให้บริการโอนเงินจากไทย'
+               : lang === 'en' ? 'Compare Remittance Providers from Thailand'
+               : lang === 'lo' ? 'ເຄື່ອງມືຄຳນວນ ແລະ ປຽບທຽບຜູ້ໃຫ້ບໍລິການໂອນເງິນ'
+               : lang === 'my' ? 'ထိုင်းနိုင်ငံမှ ငွေလွှဲဝန်ဆောင်မှုလုပ်ငန်းများ တွက်ချက်နှိုင်းယှဉ်မှု'
+               : 'ឧបករណ៍គណនា និងប្រៀបធៀបអ្នកផ្តល់សេវាផ្ទេរប្រាក់ពីថៃ'}
+            </h2>
+            <RemittanceTool lang={lang} rates={rates} />
+          </div>
+
+          {/* Cost estimation formula */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>{text.contentHeading}</h2>
+            <div className={styles.paragraphs} style={{ marginBottom: '18px' }}>
+              {text.paragraphs.map(paragraph => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+            
+            <div className={styles.formulaBox}>
+              <span className={styles.formulaTitle}>{formula.title}</span>
+              <p className={styles.formulaEquation}>{formula.equation}</p>
+              <p className={styles.formulaExplanation}>{formula.note}</p>
+            </div>
+          </div>
+
+          {/* CONCRETE CALCULATION MATH EXAMPLES */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              {lang === 'th' ? 'ตัวอย่างการคำนวณต้นทุนการโอนเงินจริง'
+               : lang === 'en' ? 'Real-World Remittance Cost Calculation Examples'
+               : lang === 'lo' ? 'ຕົວຢ່າງການຄຳນວນຕົ້ນທຶນໂອນເງິນຕົວຈິງ'
+               : lang === 'my' ? 'ငွေလွှဲစရိတ်အမှันတကယ် တွက်ချက်မှုနမူနာများ'
+               : 'ឧទាហរណ៍នៃការគណនាថ្លៃសេវាផ្ទេរប្រាក់ពិតប្រាកដ'}
+            </h2>
+            <div className={styles.examplesContainer}>
+              {mathExamples.map((ex, idx) => (
+                <div key={idx} className={styles.exampleDetailCard}>
+                  <h3>{ex.title}</h3>
+                  <p className={styles.exampleSub}>{ex.sub}</p>
+                  <div className={styles.exampleFormulaBox}>
+                    {ex.formula}
+                  </div>
+                  <div className={styles.exampleDetails}>
+                    {ex.lines.map((line, lIdx) => (
+                      <div key={lIdx} className={styles.exampleLine}>
+                        <span>- {line.split(':')[0]}:</span>
+                        <span className={styles.exampleLineVal}>{line.split(':')[1]}</span>
+                      </div>
+                    ))}
+                    <div className={styles.exampleLineTotal}>
+                      <span>{ex.total.split(':')[0]}:</span>
+                      <span className={styles.exampleTotalVal}>{ex.total.split(':')[1]}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* COUNTRY-SPECIFIC REMITTANCE GUIDES */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              {lang === 'th' ? 'เจาะลึกการโอนเงินรายประเทศ (ไทย ➔ ลาว / เมียนมา / กัมพูชา)'
+               : lang === 'en' ? 'Country Remittance Guides (Thailand to Laos / Myanmar / Cambodia)'
+               : lang === 'lo' ? 'ຄູ່ມືໂອນເງິນລາຍປະເທດ (ໄທ ➔ ລາວ / ມຽນມາ / ກຳປູເຈຍ)'
+               : lang === 'my' ? 'နိုင်ငံအလိုက် ငွေလွှဲလမ်းညွှန်ချက်များ (ထိုင်း ➔ ลาอို / မြန်မာ / ကမ္ဘောဒီးယား)'
+               : 'មគ្គុទ្ទេសក៍ផ្ទេរប្រាក់តាមប្រទេសនីមួយៗ (ថៃ ➔ ឡាវ / មីយ៉ាន់ម៉ា / កម្ពុជា)'}
+            </h2>
+            <div className={styles.guidesContainer}>
+              {countryGuides.map((guide, idx) => {
+                const slug = guide.pair.toLowerCase().replace('/', '-')
+                return (
+                  <div key={idx} className={styles.guideDetailCard}>
+                    <div className={styles.guideDetailHeader}>
+                      <h3 className={styles.guideDetailTitle}>
+                        <span>{guide.flag}</span>
+                        <span>{guide.country}</span>
+                      </h3>
+                      <Link href={localizePath(lang, `/${slug}`)} className={styles.liveRateLink}>
+                        {lang === 'th' ? `ดูเรท ${guide.pair} ล่าสุด` : `Check Live ${guide.pair} Rate`} ➔
+                      </Link>
+                    </div>
+                    <p className={styles.guideDetailText}>{guide.text}</p>
+                    <div className={styles.guideDetailChannels}>
+                      {guide.channels}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* HOW TO CHOOSE STEP-BY-STEP */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              {lang === 'th' ? 'วิธีเลือกช่องทางโอนเงินต่างประเทศให้คุ้มที่สุด'
+               : lang === 'en' ? 'How to Choose the Best Money Transfer Option'
+               : lang === 'lo' ? 'ວິທີເລືອກຊ່องທາງໂອນເງິນໃຫ້ຄຸ້ມຄ່າທີ່ສຸດ'
+               : lang === 'my' ? 'ငွေလွှဲစရိတ် အသက်သာဆုံးလမ်းကြောင်းကို မည်သို့ရွေးချယ်မလဲ'
+               : 'របៀបជ្រើសរើសច្រកផ្ទេរប្រាក់ឱ្យចំណេញបំផុត'}
+            </h2>
+            <div className={styles.howToGrid}>
+              {howToSteps.map((step, idx) => (
+                <div key={idx} className={styles.howToStepCard}>
+                  <span className={styles.stepNumber}>{idx + 1}</span>
+                  <div>
+                    <h4 className={styles.stepHeading}>{step.name}</h4>
+                    <p className={styles.stepText}>{step.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ACCORDION FAQ SECTION */}
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              {lang === 'th' ? 'คำถามที่พบบ่อยเกี่ยวกับการโอนเงินข้ามประเทศ (FAQ)'
+               : lang === 'en' ? 'Frequently Asked Questions (FAQ)'
+               : lang === 'lo' ? 'ຄຳຖາມທີ່ພົບບ່ອຍກ່ຽວກັບການໂອນເງິນ (FAQ)'
+               : lang === 'my' ? 'ငွေလွှဲခြင်းနှင့်ပတ်သက်၍ မေးလေ့ရှိသောမေးခွန်းများ (FAQ)'
+               : 'សំណួរដែលសួរញឹកញាប់អំពីการផ្ទេរប្រាក់ (FAQ)'}
+            </h2>
+            <div className={styles.faqList}>
+              {faqs.map((faq, idx) => (
+                <details key={idx} className={styles.faqItem} open={idx === 0}>
+                  <summary className={styles.faqQuestion}>{faq.question}</summary>
+                  <div className={styles.faqAnswer}>
+                    <p>{faq.answer}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          {/* RESOURCES GRID (Shows guides and regional chips side-by-side) */}
+          <div className={styles.resourcesGrid}>
             {/* Remittance guides */}
             <div className={styles.card}>
               <h2 className={styles.sidebarHeading}>
@@ -850,6 +816,37 @@ export default async function MoneyTransferPage({ params }: { params: Promise<{ 
                     {PAIR_LABELS[pair]}
                   </Link>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* YMYL E-E-A-T TRUST SIGNALS CREDENTIAL BOX */}
+          <div className={styles.eeatContainer}>
+            <div className={styles.eeatHeader}>
+              <div className={styles.eeatField}>
+                <span className={styles.eeatLabel}>{trust.author}</span>
+                <span>{trust.authorVal}</span>
+              </div>
+              <div className={styles.eeatField}>
+                <span className={styles.eeatLabel}>{trust.reviewer}</span>
+                <span>{trust.reviewerVal}</span>
+              </div>
+              <div className={styles.eeatField}>
+                <span className={styles.eeatLabel}>{trust.updated}</span>
+                <span>{lastUpdatedMonthYear}</span>
+              </div>
+            </div>
+            <div className={styles.eeatBody}>
+              <p>{trust.citation}</p>
+              <div className={styles.eeatRefs}>
+                <span className={styles.eeatRefsTitle}>{trust.refs}</span>
+                <ul className={styles.eeatRefsList}>
+                  <li><a href="https://krungthai.com/th/personal/cash-transfer/international-transfer/ktb-warp" target="_blank" rel="nofollow noopener noreferrer">Krungthai Bank WARP</a></li>
+                  <li><a href="https://www.baac.or.th" target="_blank" rel="nofollow noopener noreferrer">BAAC Bank Thailand</a></li>
+                  <li><a href="https://www.westernunion.com" target="_blank" rel="nofollow noopener noreferrer">Western Union Fees</a></li>
+                  <li><a href="https://wise.com" target="_blank" rel="nofollow noopener noreferrer">Wise Pricing Index</a></li>
+                  <li><a href="https://www.remitly.com" target="_blank" rel="sponsored noopener noreferrer">Remitly Pricing Schedule</a></li>
+                </ul>
               </div>
             </div>
           </div>
