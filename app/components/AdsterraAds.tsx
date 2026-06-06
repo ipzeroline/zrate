@@ -33,12 +33,40 @@ function createScript(src: string) {
   return script
 }
 
+function useInView<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const node = ref.current
+    if (!node || inView) return
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          setInView(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px 0px' }
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [inView])
+
+  return { ref, inView }
+}
+
 function BannerAd({ size }: { size: BannerSize }) {
   const slotRef = useRef<HTMLDivElement>(null)
   const instanceId = useId()
   const banner = BANNER_SIZES[size]
+  const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
+    if (!inView) return
+
     const slot = slotRef.current
     if (!slot) return
 
@@ -57,13 +85,10 @@ function BannerAd({ size }: { size: BannerSize }) {
     return () => {
       slot.innerHTML = ''
     }
-  }, [banner.height, banner.key, banner.width])
+  }, [banner.height, banner.key, banner.width, inView])
 
   return (
-    <div
-      className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`}
-      aria-label="Advertisement"
-    >
+    <div ref={loaderRef} className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`} aria-label="Advertisement">
       <div
         ref={slotRef}
         id={`adsterra-banner-${banner.width}x${banner.height}-${instanceId.replace(/:/g, '')}`}
@@ -93,8 +118,11 @@ export function ResponsiveBannerAd() {
 
 export function NativeBannerAd() {
   const shellRef = useRef<HTMLDivElement>(null)
+  const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
+    if (!inView) return
+
     const shell = shellRef.current
     if (!shell) return
 
@@ -108,11 +136,13 @@ export function NativeBannerAd() {
     return () => {
       script.remove()
     }
-  }, [])
+  }, [inView])
 
   return (
-    <div ref={shellRef} className={`${styles.adShell} ${styles.nativeShell}`} aria-label="Advertisement">
+    <div ref={loaderRef} className={`${styles.adShell} ${styles.nativeShell}`} aria-label="Advertisement">
+      <div ref={shellRef}>
       <div id={`container-${NATIVE_KEY}`} className={styles.nativeSlot} />
+      </div>
     </div>
   )
 }
