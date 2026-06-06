@@ -125,36 +125,37 @@ function useAdScrollRestorer() {
 
 function BannerAd({ size }: { size: BannerSize }) {
   const [isClosed, setIsClosed] = useState(false)
-  const slotRef = useRef<HTMLDivElement>(null)
-  const instanceId = useId()
   const banner = BANNER_SIZES[size]
   const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
-  useEffect(() => {
-    if (isClosed) return
-    if (!inView) return
-
-    const slot = slotRef.current
-    if (!slot) return
-
-    slot.innerHTML = ''
-    window.atOptions = {
-      key: banner.key,
-      format: 'iframe',
-      height: banner.height,
-      width: banner.width,
-      params: {},
-    }
-
-    const script = createScript(`https://www.highperformanceformat.com/${banner.key}/invoke.js`)
-    slot.appendChild(script)
-
-    return () => {
-      slot.innerHTML = ''
-    }
-  }, [banner.height, banner.key, banner.width, inView, isClosed])
-
   if (isClosed) return null
+
+  const adHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent; }
+        </style>
+      </head>
+      <body>
+        <div id="ad-slot"></div>
+        <script type="text/javascript">
+          window.atOptions = {
+            key: '${banner.key}',
+            format: 'iframe',
+            height: ${banner.height},
+            width: ${banner.width},
+            params: {}
+          };
+          const script = document.createElement('script');
+          script.src = 'https://www.highperformanceformat.com/${banner.key}/invoke.js';
+          script.async = true;
+          document.body.appendChild(script);
+        </script>
+      </body>
+    </html>
+  `
 
   return (
     <div ref={loaderRef} className={styles.adContainer}>
@@ -164,13 +165,19 @@ function BannerAd({ size }: { size: BannerSize }) {
           ปิด ×
         </button>
       </div>
-      <div className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`} aria-label="Advertisement">
-        <div
-          ref={slotRef}
-          id={`adsterra-banner-${banner.width}x${banner.height}-${instanceId.replace(/:/g, '')}`}
-          className={styles.bannerSlot}
-          style={{ width: banner.width, minHeight: banner.height }}
-        />
+      <div className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`} style={{ minHeight: banner.height }} aria-label="Advertisement">
+        {inView ? (
+          <iframe
+            srcDoc={adHtml}
+            width={banner.width}
+            height={banner.height}
+            style={{ border: 'none', overflow: 'hidden', display: 'block', margin: '0 auto' }}
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            scrolling="no"
+          />
+        ) : (
+          <div style={{ width: banner.width, height: banner.height }} />
+        )}
       </div>
     </div>
   )
@@ -207,7 +214,6 @@ export function NativeBannerAd() {
   useAdScrollRestorer()
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   const [isClosed, setIsClosed] = useState(false)
-  const shellRef = useRef<HTMLDivElement>(null)
   const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
@@ -218,26 +224,6 @@ export function NativeBannerAd() {
     media.addEventListener('change', syncSize)
     return () => media.removeEventListener('change', syncSize)
   }, [])
-
-  useEffect(() => {
-    if (isDesktop !== true) return
-    if (isClosed) return
-    if (!inView) return
-
-    const shell = shellRef.current
-    if (!shell) return
-
-    const existingScript = shell.querySelector('script')
-    if (existingScript) existingScript.remove()
-
-    const script = createScript(`https://pl29644580.effectivecpmnetwork.com/${NATIVE_KEY}/invoke.js`)
-    script.dataset.cfasync = 'false'
-    shell.insertBefore(script, shell.firstChild)
-
-    return () => {
-      script.remove()
-    }
-  }, [inView, isClosed, isDesktop])
 
   if (isDesktop === null) {
     return (
@@ -253,6 +239,27 @@ export function NativeBannerAd() {
   if (!isDesktop) return null
   if (isClosed) return null
 
+  const nativeHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent; }
+        </style>
+      </head>
+      <body>
+        <div id="container-${NATIVE_KEY}"></div>
+        <script type="text/javascript">
+          const script = document.createElement('script');
+          script.src = 'https://pl29644580.effectivecpmnetwork.com/${NATIVE_KEY}/invoke.js';
+          script.async = true;
+          script.dataset.cfasync = 'false';
+          document.body.appendChild(script);
+        </script>
+      </body>
+    </html>
+  `
+
   return (
     <div ref={loaderRef} className={`${styles.adContainer} ${styles.desktopOnly}`}>
       <div className={styles.adHeader}>
@@ -261,10 +268,19 @@ export function NativeBannerAd() {
           ปิด ×
         </button>
       </div>
-      <div className={`${styles.adShell} ${styles.nativeShell}`} aria-label="Advertisement">
-        <div ref={shellRef}>
-          <div id={`container-${NATIVE_KEY}`} className={styles.nativeSlot} />
-        </div>
+      <div className={`${styles.adShell} ${styles.nativeShell}`} style={{ minHeight: 140 }} aria-label="Advertisement">
+        {inView ? (
+          <iframe
+            srcDoc={nativeHtml}
+            width="100%"
+            height="140"
+            style={{ border: 'none', overflow: 'hidden', display: 'block' }}
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            scrolling="no"
+          />
+        ) : (
+          <div style={{ height: 140 }} />
+        )}
       </div>
     </div>
   )
