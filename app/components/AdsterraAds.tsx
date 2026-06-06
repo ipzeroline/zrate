@@ -255,3 +255,18 @@ export function NativeBannerAd() {
     </div>
   )
 }
+
+/**
+ * Combined ad section for server-component pages.
+ * Desktop: ResponsiveBanner (top) + NativeBanner (mid) + ResponsiveBanner (bottom)
+ * Mobile:  ResponsiveBanner (top) + ResponsiveBanner (bottom) — no popups, no native
+ */
+export function AdSection() {
+  return (
+    <>
+      <ResponsiveBannerAd />
+      <NativeBannerAd />
+      <ResponsiveBannerAd />
+    </>
+  )
+}

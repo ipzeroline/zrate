@@ -1,3 +1,5 @@
+import { cached } from './cache'
+
 const EODHD_API_KEY = process.env.EODHD_API_KEY || ''
 
 export interface RateResponse {
@@ -49,110 +51,116 @@ const DEFAULT_USD_RATES: Record<string, number> = {
   USDT: 1,
 }
 
+/** Shared EODHD symbols list — fetched once and cached */
+const FOREX_SYMBOLS = [
+  'EURUSD.FOREX',
+  'USDGBP.FOREX',
+  'USDJPY.FOREX',
+  'USDTHB.FOREX',
+  'USDLAK.FOREX',
+  'USDMMK.FOREX',
+  'USDKHR.FOREX',
+  'USDCNY.FOREX',
+  'USDSGD.FOREX',
+  'USDKRW.FOREX',
+  'USDHKD.FOREX',
+  'USDAUD.FOREX',
+  'USDCAD.FOREX',
+  'USDCHF.FOREX',
+  'USDNZD.FOREX',
+  'USDSEK.FOREX',
+  'USDNOK.FOREX',
+  'USDDKK.FOREX',
+  'USDINR.FOREX',
+  'USDIDR.FOREX',
+  'USDMYR.FOREX',
+  'USDPHP.FOREX',
+  'USDVND.FOREX',
+  'USDTWD.FOREX',
+  'USDBRL.FOREX',
+  'USDMXN.FOREX',
+  'USDZAR.FOREX',
+  'USDRUB.FOREX',
+  'USDTRY.FOREX',
+  'USDSAR.FOREX',
+  'USDAED.FOREX',
+  'USDPLN.FOREX',
+  'USDCZK.FOREX',
+  'USDHUF.FOREX',
+  'USDILS.FOREX',
+  'USDPKR.FOREX',
+  'USDEGP.FOREX',
+  'USDNGN.FOREX'
+].join(',')
+
+/**
+ * Fetch USD-based rates from EODHD.
+ * Cached in-memory for 2 min to prevent multiple serverless calls.
+ * Falls back to stale cache on error.
+ */
+async function fetchUsdRatesRaw(): Promise<{ rates: Record<string, number>; timestamp: Date }> {
+  const url = `https://eodhd.com/api/real-time/${FOREX_SYMBOLS}?api_token=${EODHD_API_KEY}&fmt=json`
+  const res = await fetch(url, {
+    next: { revalidate: 120 } // Next.js fetch cache: 2 min
+  })
+
+  if (!res.ok) throw new Error(`EODHD returned ${res.status}`)
+
+  const data = await res.json()
+  if (!Array.isArray(data) || data.length === 0) throw new Error('Empty EODHD response')
+
+  const usdRates: Record<string, number> = { ...DEFAULT_USD_RATES }
+  let lastTimestamp = 0
+
+  data.forEach((item: any) => {
+    const val = parseFloat(item.close)
+    const ts = parseInt(item.timestamp, 10)
+    if (!isNaN(ts) && ts > lastTimestamp) lastTimestamp = ts
+
+    if (!isNaN(val)) {
+      const codeUpper = item.code.toUpperCase()
+      if (codeUpper === 'EURUSD.FOREX' || codeUpper === 'EURUSD') {
+        usdRates['EUR'] = 1 / val
+      } else {
+        const currency = codeUpper.replace('USD', '').replace('.FOREX', '')
+        usdRates[currency] = val
+      }
+    }
+  })
+
+  return {
+    rates: usdRates,
+    timestamp: lastTimestamp ? new Date(lastTimestamp * 1000) : new Date()
+  }
+}
+
+/**
+ * Main rates fetcher with in-memory cache layer.
+ * - All bases share one USD fetch → cross-rate math is instant
+ * - 2 min TTL → max 1 call to EODHD per 2 min across all serverless instances
+ */
 export async function fetchRates(base: string): Promise<RateResponse> {
   const apiBase = base === 'USDT' ? 'USD' : base
 
-  // 1. Primary: EODHD Forex API
   try {
-    const symbols = [
-      'EURUSD.FOREX',
-      'USDGBP.FOREX',
-      'USDJPY.FOREX',
-      'USDTHB.FOREX',
-      'USDLAK.FOREX',
-      'USDMMK.FOREX',
-      'USDKHR.FOREX',
-      'USDCNY.FOREX',
-      'USDSGD.FOREX',
-      'USDKRW.FOREX',
-      'USDHKD.FOREX',
-      'USDAUD.FOREX',
-      'USDCAD.FOREX',
-      'USDCHF.FOREX',
-      'USDNZD.FOREX',
-      'USDSEK.FOREX',
-      'USDNOK.FOREX',
-      'USDDKK.FOREX',
-      'USDINR.FOREX',
-      'USDIDR.FOREX',
-      'USDMYR.FOREX',
-      'USDPHP.FOREX',
-      'USDVND.FOREX',
-      'USDTWD.FOREX',
-      'USDBRL.FOREX',
-      'USDMXN.FOREX',
-      'USDZAR.FOREX',
-      'USDRUB.FOREX',
-      'USDTRY.FOREX',
-      'USDSAR.FOREX',
-      'USDAED.FOREX',
-      'USDPLN.FOREX',
-      'USDCZK.FOREX',
-      'USDHUF.FOREX',
-      'USDILS.FOREX',
-      'USDPKR.FOREX',
-      'USDEGP.FOREX',
-      'USDNGN.FOREX'
-    ].join(',')
+    // Cache USD rates for 2 min (120000ms) — deduplicates concurrent calls too
+    const usdData = await cached('usd_base_rates', 120_000, fetchUsdRatesRaw)
 
-    const url = `https://eodhd.com/api/real-time/${symbols}?api_token=${EODHD_API_KEY}&fmt=json`
-    const res = await fetch(url, {
-      next: { revalidate: 300 } // cache for 5 minutes
-    })
+    const baseValue = usdData.rates[apiBase]
+    if (baseValue && baseValue > 0) {
+      const rates: Record<string, number> = {}
+      Object.entries(usdData.rates).forEach(([k, v]) => {
+        rates[k] = v / baseValue
+      })
+      rates['USDT'] = rates['USD']
 
-    if (res.ok) {
-      const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) {
-        // Pre-populate with defaults so any missing symbols (e.g. temporary API failure) still show values
-        const usdRates: Record<string, number> = {
-          ...DEFAULT_USD_RATES
-        }
-        let lastTimestamp = 0
-
-        data.forEach((item: any) => {
-          const val = parseFloat(item.close)
-          const ts = parseInt(item.timestamp, 10)
-          if (!isNaN(ts) && ts > lastTimestamp) {
-            lastTimestamp = ts
-          }
-
-          if (!isNaN(val)) {
-            const codeUpper = item.code.toUpperCase()
-            if (codeUpper === 'EURUSD.FOREX' || codeUpper === 'EURUSD') {
-              // EURUSD Standard quote EUR/USD means USD per 1 EUR.
-              // So 1 EUR = val USD. Therefore 1 USD = 1 / val EUR.
-              usdRates['EUR'] = 1 / val
-            } else {
-              // Standard USDxxx.FOREX pairs: USD is base, quote is xxx (e.g. 1 USD = 32.77 THB)
-              const currency = codeUpper.replace('USD', '').replace('.FOREX', '')
-              usdRates[currency] = val
-            }
-          }
-        })
-
-        const baseValue = usdRates[apiBase]
-        if (baseValue && baseValue > 0) {
-          const rates: Record<string, number> = {}
-          Object.entries(usdRates).forEach(([k, v]) => {
-            rates[k] = v / baseValue
-          })
-          
-          // Ensure USDT matches USD rate
-          rates['USDT'] = rates['USD']
-
-          console.log(`Successfully fetched & cross-rated from EODHD for base ${base}:`, rates)
-          return {
-            rates,
-            timestamp: lastTimestamp ? new Date(lastTimestamp * 1000) : new Date()
-          }
-        }
-      }
+      return { rates, timestamp: usdData.timestamp }
     }
   } catch (err) {
-    console.error('Failed to fetch rates from EODHD API, attempting fallback', err)
+    console.error('Failed to fetch rates from EODHD API:', err)
   }
 
-  // 2. Last resort fallback to static rates
+  // Ultimate fallback: static defaults
   const mock: Record<string, number> = { ...DEFAULT_USD_RATES }
   const baseValue = mock[apiBase] || 1
   const normalized: Record<string, number> = {}
@@ -161,10 +169,7 @@ export async function fetchRates(base: string): Promise<RateResponse> {
   })
   normalized['USDT'] = normalized['USD']
 
-  return {
-    rates: normalized,
-    timestamp: new Date()
-  }
+  return { rates: normalized, timestamp: new Date() }
 }
 
 export interface HistoricalDataPoint {
@@ -246,39 +251,43 @@ export async function fetchHistoricalRates(
   quote: string,
   days: number = 365
 ): Promise<HistoricalDataPoint[]> {
+  const cacheKey = `history:${base}:${quote}:${days}`
+
   try {
-    const [baseMap, quoteMap] = await Promise.all([
-      fetchSingleCurrencyHistory(base),
-      fetchSingleCurrencyHistory(quote)
-    ])
+    return await cached(cacheKey, 3_600_000, async () => { // 1 hour TTL
+      const [baseMap, quoteMap] = await Promise.all([
+        fetchSingleCurrencyHistory(base),
+        fetchSingleCurrencyHistory(quote)
+      ])
 
-    const allDates = Array.from(new Set([...Object.keys(baseMap), ...Object.keys(quoteMap)])).sort()
+      const allDates = Array.from(new Set([...Object.keys(baseMap), ...Object.keys(quoteMap)])).sort()
 
-    const points: HistoricalDataPoint[] = []
-    let lastBaseVal = base === 'USD' || base === 'USDT' ? 1 : 0
-    let lastQuoteVal = quote === 'USD' || quote === 'USDT' ? 1 : 0
+      const points: HistoricalDataPoint[] = []
+      let lastBaseVal = base === 'USD' || base === 'USDT' ? 1 : 0
+      let lastQuoteVal = quote === 'USD' || quote === 'USDT' ? 1 : 0
 
-    allDates.forEach(date => {
-      if (baseMap[date] !== undefined) {
-        lastBaseVal = baseMap[date]
+      allDates.forEach(date => {
+        if (baseMap[date] !== undefined) {
+          lastBaseVal = baseMap[date]
+        }
+        if (quoteMap[date] !== undefined) {
+          lastQuoteVal = quoteMap[date]
+        }
+
+        if (lastBaseVal > 0 && lastQuoteVal > 0) {
+          points.push({
+            date,
+            rate: lastQuoteVal / lastBaseVal
+          })
+        }
+      })
+
+      const result = points.slice(-days)
+      if (result.length > 0) {
+        return result
       }
-      if (quoteMap[date] !== undefined) {
-        lastQuoteVal = quoteMap[date]
-      }
-
-      if (lastBaseVal > 0 && lastQuoteVal > 0) {
-        points.push({
-          date,
-          rate: lastQuoteVal / lastBaseVal
-        })
-      }
+      throw new Error('No historical data points computed')
     })
-
-    const result = points.slice(-days)
-    if (result.length > 0) {
-      return result
-    }
-    throw new Error('No historical data points computed')
   } catch (error) {
     console.error(`Error fetching historical rates for ${base}-${quote}, generating mock:`, error)
     return generateMockHistory(base, quote, days)
@@ -294,28 +303,32 @@ export interface NewsItem {
 }
 
 export async function fetchCurrencyNews(base: string, quote: string): Promise<NewsItem[]> {
-  try {
-    // Attempt to query symbol pair news
-    const symbol = `${base}${quote}.FOREX`
-    const url = `https://eodhd.com/api/news?s=${symbol}&limit=5&api_token=${EODHD_API_KEY}&fmt=json`
-    const res = await fetch(url, {
-      next: { revalidate: 3600 } // cache for 1 hour
-    })
+  const cacheKey = `news:${base}:${quote}`
 
-    if (res.ok) {
-      const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) {
-        return data.slice(0, 5).map((item: any) => ({
-          date: item.date || new Date().toISOString(),
-          title: item.title,
-          url: item.link || item.url || '#',
-          source: item.source || 'EODHD Financial News',
-          sentiment: item.sentiment?.sentiment || 'Neutral'
-        }))
+  try {
+    return await cached(cacheKey, 1_800_000, async () => { // 30 min TTL
+      const symbol = `${base}${quote}.FOREX`
+      const url = `https://eodhd.com/api/news?s=${symbol}&limit=5&api_token=${EODHD_API_KEY}&fmt=json`
+      const res = await fetch(url, {
+        next: { revalidate: 3600 } // cache for 1 hour
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data) && data.length > 0) {
+          return data.slice(0, 5).map((item: any) => ({
+            date: item.date || new Date().toISOString(),
+            title: item.title,
+            url: item.link || item.url || '#',
+            source: item.source || 'EODHD Financial News',
+            sentiment: item.sentiment?.sentiment || 'Neutral'
+          }))
+        }
       }
-    }
+      throw new Error('No news data')
+    })
   } catch (error) {
-    console.error(`Error fetching news for ${base}-${quote}:`, error)
+    console.error(`Error fetching news for ${base}-${quote}, using mock:`, error)
   }
 
   return generateMockNews(base, quote)

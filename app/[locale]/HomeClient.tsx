@@ -558,14 +558,12 @@ export default function HomeClient({
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(
-        `https://api.exchangerate-api.com/v4/latest/${baseCurrency}`
-      )
+      // Use internal /api/rates with server-side caching + CDN cache
+      const res = await fetch(`/api/rates?base=${baseCurrency}`)
       if (!res.ok) throw new Error('Network error')
       const data = await res.json()
-      const combined: Rates = { ...data.rates, USDT: data.rates['USD'] || 1 }
-      setRates(combined)
-      setLastUpdated(new Date())
+      setRates(data.rates)
+      setLastUpdated(new Date(data.timestamp))
     } catch {
       setError(UI_TEXT[language].error)
       // fallback mock rates
@@ -591,7 +589,7 @@ export default function HomeClient({
     if (Object.keys(rates).length === 0) {
       fetchRates()
     }
-    const interval = setInterval(fetchRates, 60000)
+    const interval = setInterval(fetchRates, 120000) // poll every 2 min
     return () => clearInterval(interval)
   }, [fetchRates, rates])
 

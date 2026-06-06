@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Footer } from '../../components/Footer'
 import { SeoNav } from '../../components/SeoNav'
 import { Header } from '../../components/Header'
+import { AdSection } from '../../components/AdsterraAds'
 import {
   LanguageCode,
   LOCALES,
@@ -305,6 +306,8 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
 
       <SeoNav lang={lang} active="contact" />
 
+      <AdSection />
+
       <section className={styles.contentSection}>
         <div className={styles.gridMain}>
           {/* LEFT COLUMN: Main contact fields and sub-channels */}
@@ -409,6 +412,8 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
           </Link>
         </div>
       </section>
+
+      <AdSection />
 
       <Footer lang={lang} />
     </main>

@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Footer } from '../../components/Footer'
 import { SeoNav } from '../../components/SeoNav'
 import { Header } from '../../components/Header'
+import { AdSection } from '../../components/AdsterraAds'
 import {
   LanguageCode,
   LOCALES,
@@ -366,6 +367,8 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
       <SeoNav lang={lang} active="about" />
 
+      <AdSection />
+
       <section className={styles.contentSection}>
         {/* HERO SECTION */}
         <div className={styles.heroLayout}>
@@ -516,6 +519,8 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           </div>
         </section>
       </section>
+
+      <AdSection />
 
       <Footer lang={lang} />
     </main>

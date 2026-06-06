@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { Footer } from '../../components/Footer'
 import { SeoNav } from '../../components/SeoNav'
 import { Header } from '../../components/Header'
+import { AdSection } from '../../components/AdsterraAds'
 import { HUB_TEXT } from '../../../lib/hubContent'
 import {
   LanguageCode,
@@ -903,6 +904,8 @@ export default async function MoneyTransferPage({ params }: { params: Promise<{ 
 
       <SeoNav lang={lang} active="transfer" />
 
+      <AdSection />
+
       {/* BREADCRUMB NAVIGATION */}
       <div className={styles.breadcrumb}>
         <Link href={localizePath(lang, '/')}>{breadcrumbs.home}</Link>
@@ -1280,6 +1283,8 @@ export default async function MoneyTransferPage({ params }: { params: Promise<{ 
           </div>
         </div>
       </section>
+
+      <AdSection />
 
       <Footer lang={lang} />
     </main>

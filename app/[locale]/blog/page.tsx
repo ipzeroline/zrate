@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Footer } from '../../components/Footer'
 import { SeoNav } from '../../components/SeoNav'
+import { AdSection } from '../../components/AdsterraAds'
 import { BLOG_ARTICLES } from '../../../lib/blogArticles'
 import styles from './blog.module.css'
 import { BlogIndexClient } from './BlogIndexClient'
@@ -202,6 +203,8 @@ export default async function BlogIndexPage({ params }: { params: Promise<{ loca
           {text.ctaButton}
         </Link>
       </section>
+
+      <AdSection />
 
       <div style={{ marginTop: '48px' }}>
         <Footer lang={lang} />

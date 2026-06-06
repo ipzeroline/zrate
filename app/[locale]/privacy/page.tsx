@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Footer } from '../../components/Footer'
 import { SeoNav } from '../../components/SeoNav'
+import { AdSection } from '../../components/AdsterraAds'
 import { HUB_TEXT } from '../../../lib/hubContent'
 import { LanguageCode, LOCALES, SITE_URL, localizePath } from '../../../lib/siteNavigation'
 import styles from '../hub.module.css'
@@ -56,6 +57,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
 
       <SeoNav lang={lang} />
 
+      <AdSection />
+
       <section className={styles.hero}>
         <span className={styles.eyebrow}>{text.eyebrow}</span>
         <h1>{text.heading}</h1>
@@ -89,6 +92,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           {text.paragraphs.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
         </div>
       </section>
+
+      <AdSection />
 
       <Footer lang={lang} />
     </main>

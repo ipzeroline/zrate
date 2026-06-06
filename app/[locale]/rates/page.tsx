@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { Footer } from '../../components/Footer'
 import { SeoNav } from '../../components/SeoNav'
 import { Header } from '../../components/Header'
+import { AdSection } from '../../components/AdsterraAds'
 import {
   LanguageCode,
   LOCALES,
@@ -621,6 +622,8 @@ export default async function RatesPage({ params }: { params: Promise<{ locale: 
 
       <SeoNav lang={lang} active="rates" />
 
+      <AdSection />
+
       {/* BREADCRUMB UI ELEMENT */}
       <div className={styles.breadcrumb}>
         <Link href={localizePath(lang, '/')}>{content.breadcrumbHome}</Link>
@@ -809,6 +812,8 @@ export default async function RatesPage({ params }: { params: Promise<{ locale: 
           </div>
         </div>
       </section>
+
+      <AdSection />
 
       <Footer lang={lang} />
     </main>

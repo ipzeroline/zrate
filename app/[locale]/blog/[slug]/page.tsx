@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { Footer } from '../../../components/Footer'
 import { SeoNav } from '../../../components/SeoNav'
 import { Header } from '../../../components/Header'
+import { AdSection } from '../../../components/AdsterraAds'
 import { BLOG_ARTICLES } from '../../../../lib/blogArticles'
 import styles from '../blog.module.css'
 
@@ -236,6 +237,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
       <SeoNav lang={lang} active="blog" />
 
+      <AdSection />
+
       <div className={styles.articleWrapper}>
         {/* Back Button */}
         <div className={styles.backRow}>
@@ -341,6 +344,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
           </div>
         </section>
       </div>
+
+      <AdSection />
 
       <div style={{ marginTop: '48px' }}>
         <Footer lang={lang} />
