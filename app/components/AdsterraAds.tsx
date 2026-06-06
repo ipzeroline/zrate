@@ -130,33 +130,6 @@ function BannerAd({ size }: { size: BannerSize }) {
 
   if (isClosed) return null
 
-  const adHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent; }
-        </style>
-      </head>
-      <body>
-        <div id="ad-slot"></div>
-        <script type="text/javascript">
-          window.atOptions = {
-            key: '${banner.key}',
-            format: 'iframe',
-            height: ${banner.height},
-            width: ${banner.width},
-            params: {}
-          };
-          const script = document.createElement('script');
-          script.src = 'https://www.highperformanceformat.com/${banner.key}/invoke.js';
-          script.async = true;
-          document.body.appendChild(script);
-        </script>
-      </body>
-    </html>
-  `
-
   return (
     <div ref={loaderRef} className={styles.adContainer}>
       <div className={styles.adHeader}>
@@ -168,11 +141,11 @@ function BannerAd({ size }: { size: BannerSize }) {
       <div className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`} style={{ minHeight: banner.height }} aria-label="Advertisement">
         {inView ? (
           <iframe
-            srcDoc={adHtml}
+            src={`/api/ad-iframe?key=${banner.key}&width=${banner.width}&height=${banner.height}`}
             width={banner.width}
             height={banner.height}
             style={{ border: 'none', overflow: 'hidden', display: 'block', margin: '0 auto' }}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
             scrolling="no"
           />
         ) : (
@@ -239,27 +212,6 @@ export function NativeBannerAd() {
   if (!isDesktop) return null
   if (isClosed) return null
 
-  const nativeHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; background: transparent; }
-        </style>
-      </head>
-      <body>
-        <div id="container-${NATIVE_KEY}"></div>
-        <script type="text/javascript">
-          const script = document.createElement('script');
-          script.src = 'https://pl29644580.effectivecpmnetwork.com/${NATIVE_KEY}/invoke.js';
-          script.async = true;
-          script.dataset.cfasync = 'false';
-          document.body.appendChild(script);
-        </script>
-      </body>
-    </html>
-  `
-
   return (
     <div ref={loaderRef} className={`${styles.adContainer} ${styles.desktopOnly}`}>
       <div className={styles.adHeader}>
@@ -271,11 +223,11 @@ export function NativeBannerAd() {
       <div className={`${styles.adShell} ${styles.nativeShell}`} style={{ minHeight: 140 }} aria-label="Advertisement">
         {inView ? (
           <iframe
-            srcDoc={nativeHtml}
+            src={`/api/ad-iframe?key=${NATIVE_KEY}&type=native`}
             width="100%"
             height="140"
             style={{ border: 'none', overflow: 'hidden', display: 'block' }}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
             scrolling="no"
           />
         ) : (
