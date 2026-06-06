@@ -1,8 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
-import Link from 'next/link'
+import React, { useState, useEffect } from 'react'
 import styles from './money-transfer.module.css'
+import pairStyles from '../[pair]/page.module.css'
+import { InteractiveChart } from '../[pair]/InteractiveChart'
+
+interface HistoricalPoint {
+  date: string
+  rate: number
+}
 
 interface ProviderInfo {
   id: string
@@ -15,8 +21,10 @@ interface ProviderInfo {
   speed: Record<string, string> // speed by language
   url: string
   sponsor: boolean
-  supportedCorridors: string[] // ['LAK', 'MMK', 'KHR']
+  supportedCorridors: string[] // ['USD', 'LAK', 'MMK', 'KHR', ...]
 }
+
+const GLOBAL_CORRIDORS = ['USD', 'AUD', 'JPY', 'KRW', 'SGD', 'MYR', 'CNY', 'EUR', 'GBP', 'LAK', 'MMK', 'KHR', 'PHP', 'IDR', 'VND']
 
 const PROVIDERS: ProviderInfo[] = [
   {
@@ -55,7 +63,7 @@ const PROVIDERS: ProviderInfo[] = [
     },
     url: 'https://krungthai.com',
     sponsor: false,
-    supportedCorridors: ['LAK', 'MMK', 'KHR']
+    supportedCorridors: GLOBAL_CORRIDORS
   },
   {
     id: 'wu',
@@ -74,7 +82,7 @@ const PROVIDERS: ProviderInfo[] = [
     },
     url: 'https://www.westernunion.com',
     sponsor: false,
-    supportedCorridors: ['LAK', 'MMK', 'KHR']
+    supportedCorridors: GLOBAL_CORRIDORS
   },
   {
     id: 'wise',
@@ -93,7 +101,7 @@ const PROVIDERS: ProviderInfo[] = [
     },
     url: 'https://wise.com/?source=zrate',
     sponsor: true,
-    supportedCorridors: ['LAK', 'MMK', 'KHR']
+    supportedCorridors: GLOBAL_CORRIDORS
   },
   {
     id: 'remitly',
@@ -112,7 +120,7 @@ const PROVIDERS: ProviderInfo[] = [
     },
     url: 'https://www.remitly.com/?source=zrate',
     sponsor: true,
-    supportedCorridors: ['LAK', 'MMK', 'KHR']
+    supportedCorridors: GLOBAL_CORRIDORS
   }
 ]
 
@@ -133,7 +141,7 @@ interface LocalizedLabels {
 const LABELS: Record<string, LocalizedLabels> = {
   th: {
     amountLabel: 'จำนวนเงินที่ต้องการโอน (THB)',
-    destLabel: 'ประเทศปลายทาง',
+    destLabel: 'สกุลเงินปลายทาง',
     providerCol: 'ผู้ให้บริการ',
     feeCol: 'ค่าธรรมเนียมโอน',
     rateCol: 'เรทโอนเงินจริง',
@@ -146,7 +154,7 @@ const LABELS: Record<string, LocalizedLabels> = {
   },
   en: {
     amountLabel: 'Amount to Transfer (THB)',
-    destLabel: 'Destination Country',
+    destLabel: 'Destination currency',
     providerCol: 'Provider',
     feeCol: 'Transfer Fee',
     rateCol: 'Retail Rate',
@@ -159,7 +167,7 @@ const LABELS: Record<string, LocalizedLabels> = {
   },
   lo: {
     amountLabel: 'ຍອດເງິນທີ່ຕ້ອງການໂອນ (THB)',
-    destLabel: 'ປະເທດປາຍທາງ',
+    destLabel: 'ສະກຸນເງິນປາຍທາງ',
     providerCol: 'ຜູ້ໃຫ້ບໍລິການ',
     feeCol: 'ຄ່າທຳນຽມການໂອນ',
     rateCol: 'ເຣດຕົວຈິງ',
@@ -172,7 +180,7 @@ const LABELS: Record<string, LocalizedLabels> = {
   },
   my: {
     amountLabel: 'လွှဲပို့လိုသောငွေပမာဏ (THB)',
-    destLabel: 'လက်ခံမည့်နိုင်ငံ',
+    destLabel: 'လက်ခံမည့်ငွေကြေး',
     providerCol: 'ဝန်ဆောင်မှုပေးသူ',
     feeCol: 'ဝန်ဆောင်ခ',
     rateCol: 'ငွေလဲနှုန်း',
@@ -185,7 +193,7 @@ const LABELS: Record<string, LocalizedLabels> = {
   },
   km: {
     amountLabel: 'ចំនួនប្រាក់ដែលត្រូវផ្ទេរ (THB)',
-    destLabel: 'ប្រទេសគោលដៅ',
+    destLabel: 'រូបិយប័ណ្ណគោលដៅ',
     providerCol: 'អ្នកផ្តល់សេវា',
     feeCol: 'ថ្លៃសេវាផ្ទេរ',
     rateCol: 'អត្រាពិតប្រាកដ',
@@ -199,28 +207,92 @@ const LABELS: Record<string, LocalizedLabels> = {
 }
 
 const CURRENCY_NAMES: Record<string, Record<string, string>> = {
+  USD: { th: 'ดอลลาร์สหรัฐ (USD) 🇺🇸', en: 'US Dollar (USD) 🇺🇸', lo: 'ໂດລາສະຫະລັດ (USD) 🇺🇸', my: 'အမေရိကန်ဒေါ်လာ (USD) 🇺🇸', km: 'ដុល្លារអាមេរិក (USD) 🇺🇸' },
+  EUR: { th: 'ยูโร (EUR) 🇪🇺', en: 'Euro (EUR) 🇪🇺', lo: 'ເອີໂຣ (EUR) 🇪🇺', my: 'ယူရို (EUR) 🇪🇺', km: 'អឺរ៉ូ (EUR) 🇪🇺' },
+  GBP: { th: 'ปอนด์สเตอร์ลิง (GBP) 🇬🇧', en: 'British Pound (GBP) 🇬🇧', lo: 'ປອນສະเตີລິງ (GBP) 🇬🇧', my: 'ဗြိတိသျှပေါင် (GBP) 🇬🇧', km: 'ផោនស្ទឺលីង (GBP) 🇬🇧' },
+  AUD: { th: 'ดอลลาร์ออสเตรเลีย (AUD) 🇦🇺', en: 'Australian Dollar (AUD) 🇦🇺', lo: 'ໂດລາອົດສະຕຣາລີ (AUD) 🇦🇺', my: 'ဩစတြေးလျဒေါ်လာ (AUD) 🇦🇺', km: 'ដុល្លារអូស្ត្រាលី (AUD) 🇦🇺' },
+  JPY: { th: 'เยนญี่ปุ่น (JPY) 🇯🇵', en: 'Japanese Yen (JPY) 🇯🇵', lo: 'ເຢນຍີ່ປຸ່ນ (JPY) 🇯🇵', my: 'ဂျပန်ယန်း (JPY) 🇯🇵', km: 'យ៉េนជប៉ុន (JPY) 🇯🇵' },
+  KRW: { th: 'วอนเกาหลีใต้ (KRW) 🇰🇷', en: 'South Korean Won (KRW) 🇰🇷', lo: 'ວອນເກົາຫຼີໃຕ້ (KRW) 🇰🇷', my: 'တောင်ကိုရီးယားဝမ် (KRW) 🇰🇷', km: 'វ៉ុនកូរ៉េខាងត្បូង (KRW) 🇰🇷' },
+  SGD: { th: 'ดอลลาร์สิงคโปร์ (SGD) 🇸🇬', en: 'Singapore Dollar (SGD) 🇸🇬', lo: 'ໂດລາສິງກະໂປ (SGD) 🇸🇬', my: 'စင်ကာပူဒေါ်လာ (SGD) 🇸🇬', km: 'ដុល្លារសិង្ហបុរី (SGD) 🇸🇬' },
+  MYR: { th: 'ริงกิตมาเลเซีย (MYR) 🇲🇾', en: 'Malaysian Ringgit (MYR) 🇲🇾', lo: 'ຣິງກິດມາເລເຊຍ (MYR) 🇲🇾', my: 'မလေးရှားရင်းဂစ် (MYR) 🇲🇾', km: 'រីងហ្គីតម៉ាឡេស៊ី (MYR) 🇲🇾' },
+  CNY: { th: 'หยวนจีน (CNY) 🇨🇳', en: 'Chinese Yuan (CNY) 🇨🇳', lo: 'ຢວນຈີນ (CNY) 🇨🇳', my: 'တရုတ်ယွမ် (CNY) 🇨🇳', km: 'យន់ចិន (CNY) 🇨🇳' },
   LAK: { th: 'กีบลาว (LAK) 🇱🇦', en: 'Lao Kip (LAK) 🇱🇦', lo: 'ກີບລາວ (LAK) 🇱🇦', my: 'လာအိုကစ် (LAK) 🇱🇦', km: 'គីបឡាវ (LAK) 🇱🇦' },
-  MMK: { th: 'จ๊าดเมียนมา (MMK) 🇲🇲', en: 'Myanmar Kyat (MMK) 🇲🇲', lo: 'ຈາດມຽນມາ (MMK) 🇲🇲', my: 'မြန်မာကျပ် (MMK) 🇲🇲', km: 'គ្យատមីយ៉ាន់ម៉ា (MMK) 🇲🇲' },
-  KHR: { th: 'เรียลกัมพูชา (KHR) 🇰🇭', en: 'Cambodian Riel (KHR) 🇰🇭', lo: 'ຣຽວກຳປູເຈຍ (KHR) 🇰🇭', my: 'ကမ္ဘောဒီးယားရီရယ် (KHR) 🇰🇭', km: 'រៀលកម្ពុជា (KHR) 🇰🇭' }
+  MMK: { th: 'จ๊าดเมียนมา (MMK) 🇲🇲', en: 'Myanmar Kyat (MMK) 🇲🇲', lo: 'ຈາດມຽນມາ (MMK) 🇲🇲', my: 'မြန်မာကျပ် (MMK) 🇲🇲', km: 'គ្យատមីយ៉ាន់ម៉า (MMK) 🇲🇲' },
+  KHR: { th: 'เรียลกัมพูชา (KHR) 🇰🇭', en: 'Cambodian Riel (KHR) 🇰🇭', lo: 'ຣຽວກຳປູເຈຍ (KHR) 🇰🇭', my: 'ကမ္ဘောဒီးယားရီရယ် (KHR) 🇰🇭', km: 'រៀលកម្ពុជា (KHR) 🇰🇭' },
+  PHP: { th: 'เปโซฟิลิปปินส์ (PHP) 🇵🇭', en: 'Philippine Peso (PHP) 🇵🇭', lo: 'ເປໂຊຟິລິບປິນ (PHP) 🇵🇭', my: 'ဖိလစ်ပိုင်ပီဆို (PHP) 🇵🇭', km: 'ប៉េសូហ្វីលីពីន (PHP) 🇵🇭' },
+  IDR: { th: 'รูเปียห์อินโดนีเซีย (IDR) 🇮🇩', en: 'Indonesian Rupiah (IDR) 🇮🇩', lo: 'ຣູເປຍອິນໂດເນເຊຍ (IDR) 🇮🇩', my: 'အင်ဒိုနီးရှားရူပီးယား (IDR) 🇮🇩', km: 'រូពៀឥណ្ឌូនេស៊ី (IDR) 🇮🇩' },
+  VND: { th: 'ดองเวียดนาม (VND) 🇻🇳', en: 'Vietnamese Dong (VND) 🇻🇳', lo: 'ດົງຫວຽດນາມ (VND) 🇻🇳', my: 'ဗီယက်နမ်ဒေါင် (VND) 🇻🇳', km: 'ដុងវៀតណាម (VND) 🇻🇳' }
 }
 
 const CURRENCY_SHORTS: Record<string, string> = {
+  USD: '🇺🇸 USD',
+  EUR: '🇪🇺 EUR',
+  GBP: '🇬🇧 GBP',
+  AUD: '🇦🇺 AUD',
+  JPY: '🇯🇵 JPY',
+  KRW: '🇰🇷 KRW',
+  SGD: '🇸🇬 SGD',
+  MYR: '🇲🇾 MYR',
+  CNY: '🇨🇳 CNY',
   LAK: '🇱🇦 LAK',
   MMK: '🇲🇲 MMK',
-  KHR: '🇰🇭 KHR'
+  KHR: '🇰🇭 KHR',
+  PHP: '🇵🇭 PHP',
+  IDR: '🇮🇩 IDR',
+  VND: '🇻🇳 VND'
 }
 
 interface RemittanceToolProps {
   lang: string
   rates: Record<string, number>
+  initialHistory: HistoricalPoint[]
+  initialCorridor: string
 }
 
-export function RemittanceTool({ lang, rates }: RemittanceToolProps) {
+export function RemittanceTool({ lang, rates, initialHistory, initialCorridor }: RemittanceToolProps) {
   const [amount, setAmount] = useState<number>(10000)
-  const [corridor, setCorridor] = useState<string>('LAK')
+  const [corridor, setCorridor] = useState<string>(initialCorridor)
+  const [chartHistory, setChartHistory] = useState<HistoricalPoint[]>(initialHistory)
+  const [chartLoading, setChartLoading] = useState(false)
 
   const labels = LABELS[lang] || LABELS.en
-  const midMarketRate = rates[corridor] || (corridor === 'LAK' ? 640 : corridor === 'MMK' ? 98 : 115)
+  const midMarketRate = rates[corridor] || 1
+  const locale = lang === 'th' ? 'th-TH' : 'en-US'
+  const isDecimalCurrency = ['USD', 'EUR', 'GBP', 'AUD', 'SGD', 'MYR'].includes(corridor)
+  const rateFractionDigits = midMarketRate >= 100 ? 2 : midMarketRate >= 1 ? 4 : 6
+
+  // useEffect to fetch history dynamically when corridor changes
+  useEffect(() => {
+    let active = true
+    const fetchHistory = async () => {
+      setChartLoading(true)
+      try {
+        const res = await fetch(`/api/history?base=THB&quote=${corridor}&days=365`)
+        if (res.ok) {
+          const data = await res.json()
+          if (active) {
+            setChartHistory(data)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch remittance history:', err)
+      } finally {
+        if (active) {
+          setChartLoading(false)
+        }
+      }
+    }
+
+    if (corridor !== initialCorridor) {
+      fetchHistory()
+    } else {
+      setChartHistory(initialHistory)
+    }
+
+    return () => {
+      active = false
+    }
+  }, [corridor, initialCorridor, initialHistory])
 
   // Filter and calculate for supported providers
   const results = PROVIDERS.filter(p => p.supportedCorridors.includes(corridor)).map(p => {
@@ -276,12 +348,14 @@ export function RemittanceTool({ lang, rates }: RemittanceToolProps) {
         <div className={styles.toolField}>
           <label className={styles.toolLabel}>{labels.destLabel}</label>
           <div className={styles.tabGrid}>
-            {['LAK', 'MMK', 'KHR'].map(curr => (
+            {Object.keys(CURRENCY_SHORTS).map(curr => (
               <button
                 key={curr}
                 type="button"
                 onClick={() => setCorridor(curr)}
                 className={`${styles.tabBtn} ${corridor === curr ? styles.tabBtnActive : ''}`}
+                title={CURRENCY_NAMES[curr]?.[lang] || curr}
+                aria-label={CURRENCY_NAMES[curr]?.[lang] || curr}
               >
                 {CURRENCY_SHORTS[curr]}
               </button>
@@ -334,20 +408,20 @@ export function RemittanceTool({ lang, rates }: RemittanceToolProps) {
 
                   <td className={styles.td}>
                     <span className={styles.numCell}>
-                      {row.fee.toLocaleString(lang === 'th' ? 'th-TH' : 'en-US', { maximumFractionDigits: 2 })} THB
+                      {row.fee.toLocaleString(locale, { maximumFractionDigits: 2 })} THB
                     </span>
                   </td>
 
                   <td className={styles.td}>
                     <span className={styles.numCell}>
-                      1 THB = {row.retailRate.toLocaleString(lang === 'th' ? 'th-TH' : 'en-US', { maximumFractionDigits: 4 })} {corridor}
+                      1 THB = {row.retailRate.toLocaleString(locale, { maximumFractionDigits: rateFractionDigits })} {corridor}
                     </span>
                   </td>
 
                   <td className={styles.td}>
                     <span className={isBest ? styles.bestReceivedVal : styles.numCell}>
-                      {row.receivedAmount.toLocaleString(lang === 'th' ? 'th-TH' : 'en-US', {
-                        maximumFractionDigits: 0
+                      {row.receivedAmount.toLocaleString(locale, {
+                        maximumFractionDigits: isDecimalCurrency ? 2 : 0
                       })}{' '}
                       {corridor}
                     </span>
@@ -373,8 +447,64 @@ export function RemittanceTool({ lang, rates }: RemittanceToolProps) {
       </div>
 
       <p className={styles.toolNote}>
-        * {labels.noteText} (Mid-market: 1 THB = {midMarketRate.toFixed(2)} {corridor})
+        * {labels.noteText} (Mid-market: 1 THB = {midMarketRate.toLocaleString(locale, { maximumFractionDigits: rateFractionDigits })} {corridor})
       </p>
+
+      {/* Historical Trend Chart for the Corridor */}
+      {chartHistory && chartHistory.length > 0 && (
+        <div style={{ marginTop: '32px', position: 'relative' }}>
+          {chartLoading && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(248, 250, 252, 0.4)',
+              backdropFilter: 'blur(1px)',
+              borderRadius: '8px',
+              zIndex: 10
+            }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'var(--bg-elevated, #ffffff)',
+                border: '1px solid var(--border, rgba(148, 163, 184, 0.2))',
+                padding: '8px 16px',
+                borderRadius: '30px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                color: 'var(--ink)'
+              }}>
+                <div className={styles.loadingSpinner} style={{ width: '14px', height: '14px', margin: 0 }}></div>
+                <span>{lang === 'th' ? 'กำลังดึงข้อมูล...' : 'Loading...'}</span>
+              </div>
+            </div>
+          )}
+          <div className={pairStyles.chartHeader} style={{ marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '1.24rem', fontWeight: 700, color: 'var(--ink)' }}>
+              {lang === 'th' ? `กราฟประวัติอัตราแลกเปลี่ยน THB/${corridor} ย้อนหลัง`
+               : lang === 'en' ? `THB/${corridor} Exchange Rate Trend`
+               : lang === 'lo' ? `ແນວໂນ້ມອັດຕາແລກປ່ຽນ THB/${corridor}`
+               : lang === 'my' ? `THB/${corridor} ငွေလဲနှုန်းပြောင်းလဲမှုဇယား`
+               : `គំនូសតាងអត្រាប្តូរប្រាក់ THB/${corridor}`}
+            </h3>
+            <div className={pairStyles.chartSub}>
+              {lang === 'th' ? `ข้อมูลการเคลื่อนไหวของเงินบาท (THB) เทียบกับ ${corridor} เพื่อการประเมินเวลาโอนเงินที่ดีที่สุด`
+               : lang === 'en' ? `Value fluctuations of THB against ${corridor} to determine the best transfer timing.`
+               : lang === 'lo' ? `ການເຫນັງຕີງຂອງເງິນບາດ (THB) ທຽບກັບ ${corridor} ເພື່ອຫາເວລາໂອນເງິນທີ່ດີທີ່ສຸດ`
+               : lang === 'my' ? `ငွေလွှဲရန် အကောင်းဆုံးအချိန်ကို ရွေးချယ်နိုင်ရန် THB နှင့် ${corridor} ပြသချက်`
+               : `ការប្រែប្រួលតម្លៃប្រាក់បាត (THB) ធៀបនឹង ${corridor} ដើម្បីវายតម្លៃពេលវេលាផ្ទេរប្រាក់ល្អបំផុត`}
+            </div>
+          </div>
+          <InteractiveChart history={chartHistory} lang={lang} baseSymbol="THB" quoteSymbol={corridor} />
+        </div>
+      )}
     </div>
   )
 }

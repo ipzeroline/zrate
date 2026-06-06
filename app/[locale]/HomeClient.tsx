@@ -7,6 +7,23 @@ import { NativeBannerAd, ResponsiveBannerAd } from '../components/AdsterraAds'
 import { Footer } from '../components/Footer'
 import { SeoNav } from '../components/SeoNav'
 import styles from '../page.module.css'
+import pairStyles from './[pair]/page.module.css'
+import { InteractiveChart } from './[pair]/InteractiveChart'
+import { AseanDashboard } from './[pair]/AseanDashboard'
+import { NewsFeed } from './[pair]/NewsFeed'
+
+interface HistoricalPoint {
+  date: string
+  rate: number
+}
+
+interface NewsItem {
+  date: string
+  title: string
+  url: string
+  source: string
+  sentiment: string
+}
 
 const CURRENCY_INFO: Record<string, { flag: string; name: string; symbol: string }> = {
   USD: { flag: '\u{1F1FA}\u{1F1F8}', name: 'US Dollar', symbol: '$' },
@@ -437,10 +454,18 @@ export default function HomeClient({
   locale,
   initialBase,
   initialRates,
+  history,
+  news,
+  chartBase,
+  chartQuote,
 }: {
   locale: LanguageCode
   initialBase: string
   initialRates: Record<string, number>
+  history: HistoricalPoint[]
+  news: NewsItem[]
+  chartBase: string
+  chartQuote: string
 }) {
   const [rates, setRates] = useState<Rates>(initialRates)
   const [language, setLanguage] = useState<LanguageCode>(locale)
@@ -452,6 +477,49 @@ export default function HomeClient({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [favorites, setFavorites] = useState<string[]>(CURRENCY_PRIORITY[locale])
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+
+  const [activeChartBase, setActiveChartBase] = useState(chartBase)
+  const [activeChartQuote, setActiveChartQuote] = useState(chartQuote)
+  const [chartHistory, setChartHistory] = useState<HistoricalPoint[]>(history)
+  const [chartNews, setChartNews] = useState<NewsItem[]>(news)
+  const [chartLoading, setChartLoading] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const loadChartData = async () => {
+      setChartLoading(true)
+      try {
+        const [histRes, newsRes] = await Promise.all([
+          fetch(`/api/history?base=${activeChartBase}&quote=${activeChartQuote}&days=365`),
+          fetch(`/api/news?base=${activeChartBase}&quote=${activeChartQuote}`)
+        ])
+        if (!active) return
+        if (histRes.ok) {
+          const histData = await histRes.json()
+          setChartHistory(histData)
+        }
+        if (newsRes.ok) {
+          const newsData = await newsRes.json()
+          setChartNews(newsData)
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic chart data:', err)
+      } finally {
+        if (active) setChartLoading(false)
+      }
+    }
+
+    if (activeChartBase !== chartBase || activeChartQuote !== chartQuote) {
+      loadChartData()
+    } else {
+      setChartHistory(history)
+      setChartNews(news)
+    }
+
+    return () => {
+      active = false
+    }
+  }, [activeChartBase, activeChartQuote, chartBase, chartQuote, history, news])
 
   useEffect(() => {
     const htmlTheme = document.documentElement.getAttribute('data-theme') as 'light' | 'dark' | null
@@ -915,6 +983,135 @@ export default function HomeClient({
       </section>
 
       <NativeBannerAd />
+
+      {/* Interactive Chart Section */}
+      {chartHistory && chartHistory.length > 0 && (
+        <section className={pairStyles.chartSection} aria-label="Exchange Rate Chart">
+          <div className={pairStyles.chartHeader}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <h3>
+                  {language === 'th' ? `กราฟประวัติอัตราแลกเปลี่ยน ${activeChartBase}/${activeChartQuote}`
+                   : language === 'en' ? `${activeChartBase}/${activeChartQuote} Historical Rate Chart`
+                   : language === 'lo' ? `ກຣາບປະຫວັດອັດຕาແລກປ່ຽນ ${activeChartBase}/${activeChartQuote}`
+                   : language === 'my' ? `${activeChartBase}/${activeChartQuote} ငွေလဲနှုန်းပြောင်းလဲမှုဇယား`
+                   : `គំនូសតាងប្រវត្តិនៃអត្រាប្តូរប្រាក់ ${activeChartBase}/${activeChartQuote}`}
+                </h3>
+                <div className={pairStyles.chartSub}>
+                  {language === 'th' ? `แสดงความเคลื่อนไหวและมูลค่าของสกุลเงิน ${activeChartBase} เทียบกับ ${activeChartQuote} ตามช่วงเวลา`
+                   : language === 'en' ? `Shows value fluctuations of ${activeChartBase} against ${activeChartQuote} over selected time periods`
+                   : language === 'lo' ? `ສະແດງການເຫນັງຕີງ ແລະມູນຄ່າຂອງສະກຸນເງິນ ${activeChartBase} ທຽບກັບ ${activeChartQuote} ຕາມໄລຍະເວລາ`
+                   : language === 'my' ? `သတ်မှတ်ထားသော ကာလအပိုင်းအခြားအလိုက် ${activeChartBase} နှင့် ${activeChartQuote} ငွေလဲနှုန်း အပြောင်းအလဲများကို ဖော်ပြချက်`
+                   : `បង្ហាញการប្រែប្រួលតម្លៃនៃ ${activeChartBase} ធៀបនឹង ${activeChartQuote} ទៅតាមរយៈពេលកំណត់`}
+                </div>
+              </div>
+
+              {/* Dynamic Currency Selectors */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '8px', 
+                alignItems: 'center', 
+                background: 'var(--bg-elevated, #ffffff)', 
+                padding: '8px 16px', 
+                borderRadius: '12px', 
+                border: '1px solid var(--border, rgba(148, 163, 184, 0.2))',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+              }}>
+                <select 
+                  value={activeChartBase} 
+                  onChange={e => setActiveChartBase(e.target.value)}
+                  style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    color: 'var(--ink, #0f172a)', 
+                    fontSize: '0.92rem', 
+                    fontWeight: 700, 
+                    outline: 'none', 
+                    cursor: 'pointer',
+                    paddingRight: '4px'
+                  }}
+                  aria-label="Chart base currency"
+                >
+                  {currencies.map(c => (
+                    <option key={`chart-base-${c}`} value={c} style={{ background: 'var(--bg-surface, #f8fafc)', color: 'var(--ink)' }}>
+                      {CURRENCY_INFO[c]?.flag} {c}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ color: 'var(--ink-dim, #94a3b8)', fontWeight: 600 }}>→</span>
+                <select 
+                  value={activeChartQuote} 
+                  onChange={e => setActiveChartQuote(e.target.value)}
+                  style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    color: 'var(--ink, #0f172a)', 
+                    fontSize: '0.92rem', 
+                    fontWeight: 700, 
+                    outline: 'none', 
+                    cursor: 'pointer',
+                    paddingLeft: '4px'
+                  }}
+                  aria-label="Chart target currency"
+                >
+                  {currencies.map(c => (
+                    <option key={`chart-quote-${c}`} value={c} style={{ background: 'var(--bg-surface, #f8fafc)', color: 'var(--ink)' }}>
+                      {CURRENCY_INFO[c]?.flag} {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ opacity: chartLoading ? 0.6 : 1, transition: 'opacity 0.2s ease', position: 'relative' }}>
+            {chartLoading && (
+              <div style={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                background: 'rgba(248, 250, 252, 0.4)', 
+                backdropFilter: 'blur(1px)',
+                borderRadius: '8px',
+                zIndex: 10 
+              }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'var(--bg-elevated, #ffffff)',
+                  border: '1px solid var(--border, rgba(148, 163, 184, 0.2))',
+                  padding: '8px 16px',
+                  borderRadius: '30px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  color: 'var(--ink)'
+                }}>
+                  <div className={styles.loadingSpinner} style={{ width: '14px', height: '14px', margin: 0 }}></div>
+                  <span>{language === 'th' ? 'กำลังดึงข้อมูล...' : 'Loading...'}</span>
+                </div>
+              </div>
+            )}
+            <InteractiveChart history={chartHistory} lang={language} baseSymbol={activeChartBase} quoteSymbol={activeChartQuote} />
+          </div>
+        </section>
+      )}
+
+      {/* ASEAN Dashboard Section */}
+      <AseanDashboard lang={language} />
+
+      {/* News Feed Section */}
+      {chartNews && chartNews.length > 0 && (
+        <div style={{ opacity: chartLoading ? 0.6 : 1, transition: 'opacity 0.2s ease' }}>
+          <NewsFeed news={chartNews} lang={language} baseSymbol={activeChartBase} quoteSymbol={activeChartQuote} />
+        </div>
+      )}
 
       <section className={styles.seoSection} aria-labelledby="exchange-info-heading">
         <div className={styles.seoIntro}>

@@ -15,11 +15,16 @@ declare global {
   }
 }
 
-type BannerSize = 'mobile' | 'desktop'
-
 const NATIVE_KEY = '55839f2c5b4e3fb35184faac274e5138'
-const MOBILE_BANNER_KEY = '8698763d9b806ab84826aebdd09784e7'
 const DESKTOP_BANNER_KEY = '109f0016d0d3b1b39fd92ba8ea69e764'
+const MOBILE_RECTANGLE_BANNER_KEY = '109f0016d0d3b1b39fd92ba8ea69e764'
+
+const BANNER_SIZES = {
+  desktop: { width: 728, height: 90, key: DESKTOP_BANNER_KEY },
+  mobile: { width: 300, height: 250, key: MOBILE_RECTANGLE_BANNER_KEY },
+} as const
+
+type BannerSize = keyof typeof BANNER_SIZES
 
 function createScript(src: string) {
   const script = document.createElement('script')
@@ -31,10 +36,7 @@ function createScript(src: string) {
 function BannerAd({ size }: { size: BannerSize }) {
   const slotRef = useRef<HTMLDivElement>(null)
   const instanceId = useId()
-  const isDesktop = size === 'desktop'
-  const width = isDesktop ? 728 : 320
-  const height = isDesktop ? 90 : 50
-  const key = isDesktop ? DESKTOP_BANNER_KEY : MOBILE_BANNER_KEY
+  const banner = BANNER_SIZES[size]
 
   useEffect(() => {
     const slot = slotRef.current
@@ -42,31 +44,31 @@ function BannerAd({ size }: { size: BannerSize }) {
 
     slot.innerHTML = ''
     window.atOptions = {
-      key,
+      key: banner.key,
       format: 'iframe',
-      height,
-      width,
+      height: banner.height,
+      width: banner.width,
       params: {},
     }
 
-    const script = createScript(`https://www.highperformanceformat.com/${key}/invoke.js`)
+    const script = createScript(`https://www.highperformanceformat.com/${banner.key}/invoke.js`)
     slot.appendChild(script)
 
     return () => {
       slot.innerHTML = ''
     }
-  }, [height, key, width])
+  }, [banner.height, banner.key, banner.width])
 
   return (
     <div
-      className={`${styles.adShell} ${isDesktop ? styles.desktopBanner : styles.mobileBanner}`}
+      className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`}
       aria-label="Advertisement"
     >
       <div
         ref={slotRef}
-        id={`adsterra-banner-${size}-${instanceId.replace(/:/g, '')}`}
+        id={`adsterra-banner-${banner.width}x${banner.height}-${instanceId.replace(/:/g, '')}`}
         className={styles.bannerSlot}
-        style={{ width, minHeight: height }}
+        style={{ width: banner.width, minHeight: banner.height }}
       />
     </div>
   )

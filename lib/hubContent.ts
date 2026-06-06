@@ -139,7 +139,7 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
       cards: [
         { title: 'ຄູ່ເງິນບາດ', body: 'USD/THB, EUR/THB ແລະ USDT/THB', href: '/usd-thb' },
         { title: 'ຄູ່ເງິນລາວ', body: 'THB/LAK ແລະ USD/LAK', href: '/thb-lak' },
-        { title: 'ຄູ່ເງິນອາຊຽນ', body: 'THB/MMK, THB/KHR ແລະ USD/KHR', href: '/thb-mmk' },
+        { title: 'ຄູ່ເງິນອາຊຽນ', body: 'THB/MMK, THB/KHR ແລະ USD/KHR', href: '/usd-mmk' },
       ],
       linksHeading: 'ເລືອກຄູ່ເງິນ',
       contentHeading: 'ເຫດໃດຈຶ່ງຕ້ອງມີໜ້າຄູ່ເງິນສະເພາະ',
@@ -180,11 +180,11 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
   },
   transfer: {
     th: {
-      title: 'คู่มือโอนเงินต่างประเทศและเทียบเรทโอนเงิน',
-      description: 'คู่มือโอนเงินต่างประเทศ เทียบเรทและค่าธรรมเนียมสำหรับไทย ลาว เมียนมา กัมพูชา พร้อมลิงก์ไปเรทคู่เงินที่ใช้คำนวณต้นทุน',
+      title: 'โอนเงินต่างประเทศจากไทย เทียบค่าธรรมเนียม+เรท 2026',
+      description: 'คู่มือโอนเงินต่างประเทศจากไทยไปลาว เมียนมา กัมพูชา เทียบค่าธรรมเนียมจริงและส่วนต่างเรทแลกเปลี่ยนของผู้ให้บริการ เช่น ธนาคาร, Western Union, Wise และ Remitly เพื่อช่องทางที่คุ้มค่าที่สุด',
       eyebrow: 'Money transfer guide',
-      heading: 'โอนเงินต่างประเทศให้คุ้ม ต้องเทียบทั้งค่าธรรมเนียมและเรท',
-      body: 'หน้า hub สำหรับบทความโอนเงินและคู่เงินที่เกี่ยวข้อง เหมาะกับผู้ใช้ที่ต้องการส่งเงินระหว่างไทย ลาว เมียนมา และกัมพูชา',
+      heading: 'โอนเงินต่างประเทศจากไทยไปลาว เมียนมา กัมพูชา — เทียบค่าธรรมเนียมและเรท',
+      body: 'คู่มือการโอนเงินและช่องทางส่งเงินข้ามพรมแดนในภูมิภาคอาเซียน ช่วยให้คุณคำนวณต้นทุนการทำธุรกรรมจริงเพื่อหลีกเลี่ยงค่าธรรมเนียมแอบแฝงและได้เรทแลกเปลี่ยนที่ดีที่สุด',
       cardsHeading: 'คู่เงินที่ใช้คำนวณค่าโอน',
       cards: [
         { title: 'THB/MMK', body: 'ใช้ประเมินยอดรับปลายทางเมียนมา', href: '/thb-mmk' },
@@ -192,15 +192,18 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
         { title: 'THB/KHR', body: 'ใช้ประเมินค่าใช้จ่ายไทย-กัมพูชา', href: '/thb-khr' },
       ],
       linksHeading: 'เรทที่เกี่ยวกับการโอนเงิน',
-      contentHeading: 'สูตรคิดต้นทุนโอนเงิน',
-      paragraphs: ['ต้นทุนรวมของการโอนเงินไม่ได้มีแค่ค่าธรรมเนียม แต่รวมส่วนต่างเรทที่ผู้ให้บริการบวกไว้ด้วย', 'ก่อนโอนให้เทียบจำนวนเงินปลายทางที่ผู้รับจะได้จริงกับเรทอ้างอิงบน zrate.io เพื่อดูว่าช่องทางไหนคุ้มกว่า'],
+      contentHeading: 'สูตรคิดต้นทุนโอนเงินข้ามพรมแดนที่แท้จริง',
+      paragraphs: [
+        'การโอนเงินต่างประเทศประกอบด้วยสองต้นทุนสำคัญ: 1. ค่าธรรมเนียมการโอน (Transfer Fee) ที่ประกาศเป็นตัวเลขชัดเจน และ 2. ส่วนต่างอัตราแลกเปลี่ยน (Exchange Rate Margin) ซึ่งเป็นอัตราแลกเปลี่ยนค้าปลีกที่ผู้ให้บริการใช้จริงเทียบกับเรทตลาดกลางที่แสดงบน zrate.io',
+        'หากเปรียบเทียบเพียงตัวเลขค่าบริการโชว์หน้าร้าน คุณอาจสูญเสียยอดรับปลายทางไปกับส่วนต่างอัตราแลกเปลี่ยนที่สูงเกินจริง การเช็กเรทตลาดกลางบน zrate.io จะช่วยให้คุณคำนวณต้นทุนรวมได้อย่างโปร่งใสและคุ้มค่าสูงสุด'
+      ],
     },
     en: {
-      title: 'International Money Transfer Guides and Rate Comparison',
-      description: 'Money transfer guides for Thailand, Laos, Myanmar and Cambodia with exchange-rate links for calculating total transfer costs.',
+      title: 'Send Money Internationally from Thailand: Compare Fees & Rates 2026',
+      description: 'Compare money transfer fees and exchange rate margins from Thailand to Laos, Myanmar, Cambodia, and globally. Find the most cost-effective remittance providers including banks, Wise, and Remitly.',
       eyebrow: 'Money transfer guide',
-      heading: 'Compare both fees and exchange rates before sending money',
-      body: 'A hub for remittance articles and related exchange-rate pages, built for users sending money across Thailand, Laos, Myanmar and Cambodia.',
+      heading: 'International Money Transfer from Thailand: Compare Fees & Rates',
+      body: 'Compare regional and global remittance providers. Discover hidden margins, check transaction speeds, and learn how to optimize your cross-border transfers.',
       cardsHeading: 'Pairs used for transfer estimates',
       cards: [
         { title: 'THB/MMK', body: 'Estimate receiving amounts for Myanmar transfers.', href: '/thb-mmk' },
@@ -208,15 +211,18 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
         { title: 'THB/KHR', body: 'Estimate Thailand-Cambodia costs.', href: '/thb-khr' },
       ],
       linksHeading: 'Rates related to remittance',
-      contentHeading: 'How to estimate transfer cost',
-      paragraphs: ['The total cost of a money transfer is not only the displayed fee. It also includes the exchange-rate margin added by the provider.', 'Before sending money, compare the real receiving amount with reference rates on zrate.io to see which channel is more cost-effective.'],
+      contentHeading: 'How to Estimate Your Total Remittance Cost',
+      paragraphs: [
+        'The true cost of cross-border money transfer includes two components: 1. The flat or percentage transfer fee, and 2. The exchange rate markup (margin) applied over the interbank mid-market rate.',
+        'Many providers advertise "zero fees" but use highly unfavorable retail rates. Checking mid-market reference values on zrate.io beforehand lets you calculate the actual received sum.'
+      ],
     },
     lo: {
-      title: 'ຄູ່ມືໂອນເງິນຕ່າງປະເທດ',
-      description: 'ຄູ່ມືໂອນເງິນ ແລະການທຽບເຣດສຳລັບໄທ ລາວ ມຽນມາ ແລະກຳປູເຈຍ',
+      title: 'ໂອນເງິນຕ່າງປະເທດຈາກໄທ ທຽບຄ່າທຳນຽມ ແລະ ເຣດ 2026',
+      description: 'ຄູ່ມືໂອນເງິນຈາກໄທໄປລາວ ມຽນມາ ກຳປູເຈຍ ທຽບຄ່າທຳນຽມ ແລະ ເຣດອັດຕາແລກປ່ຽນຕົວຈິງ ເພື່ອຊອກຫາຊ່ອງທາງທີ່ຄຸ້ມຄ່າທີ່ສຸດ',
       eyebrow: 'Money transfer guide',
-      heading: 'ກ່ອນໂອນເງິນຄວນທຽບທັງຄ່າທຳນຽມແລະເຣດ',
-      body: 'ສູນລວມບົດຄວາມໂອນເງິນ ແລະຄູ່ເງິນທີ່ກ່ຽວຂ້ອງໃນພາກພື້ນ',
+      heading: 'ໂອນເງິນຕ່າງປະເທດຈາກໄທໄປລາວ ມຽນມາ ກຳປູເຈຍ — ທຽບຄ່າທຳນຽມ ແລະ ເຣດ',
+      body: 'ຄູ່ມືການໂອນເງິນ ແລະ ຊ່ອງທາງສົ່ງເງິນໃນພາກພື້ນ ຊ່ວຍໃຫ້ທ່ານຄຳນວນຕົ້ນທຶນຕົວຈິງ ເພື່ອຫຼີກລ່ຽງຄ່າທຳນຽມແຝງ ແລະ ໄດ້ຮັບເຣດທີ່ດີທີ່ສຸດ',
       cardsHeading: 'ຄູ່ເງິນສຳລັບຄຳນວນຄ່າໂອນ',
       cards: [
         { title: 'THB/LAK', body: 'ປະເມີນຍອດຮັບລະຫວ່າງໄທ-ລາວ', href: '/thb-lak' },
@@ -224,15 +230,18 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
         { title: 'THB/MMK', body: 'ອ້າງອີງການໂອນໄປມຽນມາ', href: '/thb-mmk' },
       ],
       linksHeading: 'ເຣດທີ່ກ່ຽວກັບການໂອນ',
-      contentHeading: 'ວິທີຄິດຕົ້ນທຶນໂອນເງິນ',
-      paragraphs: ['ຕົ້ນທຶນລວມມີທັງຄ່າທຳນຽມ ແລະສ່ວນຕ່າງອັດຕາແລກປ່ຽນ', 'ກ່ອນໂອນຄວນທຽບຈຳນວນເງິນປາຍທາງກັບເຣດອ້າງອີງໃນ zrate.io'],
+      contentHeading: 'ວິທີຄິດຕົ້ນທຶນໂອນເງິນຕົວຈິງ',
+      paragraphs: [
+        'ຕົ້ນທຶນລວມມີທັງຄ່າທຳນຽມການໂອນ ແລະສ່ວນຕ່າງອັດຕາແລກປ່ຽນແຝງທີ່ຜູ້ໃຫ້ບໍລິການບວກເພີ່ມຈາກຕະຫຼາດກາງ.',
+        'ກ່ອນໂອນຄວນທຽບຈຳນວນເງິນສຸດທິທີ່ປາຍທາງຈະໄດ້ຮັບຕົວຈິງ ກັບເຣດອ້າງອີງໃນ zrate.io ເພື່ອຄວາມຄຸ້ມຄ່າ.'
+      ],
     },
     my: {
-      title: 'နိုင်ငံတကာငွေလွှဲလမ်းညွှန်',
-      description: 'ထိုင်း၊ လာအို၊ မြန်မာ၊ ကမ္ဘောဒီးယားအတွက် ငွေလွှဲနှင့် ငွေလဲနှုန်းနှိုင်းယှဉ်လမ်းညွှန်',
+      title: 'ထိုင်းမှ နိုင်ငံတကာငွေလွှဲခြင်း — ဝန်ဆောင်ခနှင့် နှုန်းထားများ နှိုင်းယှဉ်ချက် ၂၀၂၆',
+      description: 'ထိုင်းနိုင်ငံမှ မြန်မာ၊ လာအို၊ ကမ္ဘောဒီးယားသို့ ငွေလွှဲဝန်ဆောင်ခများနှင့် ငွေလဲနှုန်းကွာဟချက်များ နှိုင်းယှဉ်ချက်။ အသက်သာဆုံး ငွေလွှဲလမ်းညွှန်။',
       eyebrow: 'Money transfer guide',
-      heading: 'ငွေလွှဲမလုပ်ခင် ဝန်ဆောင်ခနှင့် ငွေလဲနှုန်းနှစ်ခုလုံးကို နှိုင်းယှဉ်ပါ',
-      body: 'ထိုင်း၊ လာအို၊ မြန်မာနှင့် ကမ္ဘောဒီးယားအတွက် ငွေလွှဲဆောင်းပါးများနှင့် သက်ဆိုင်သောနှုန်းစာမျက်နှာများစုစည်းထားသည်',
+      heading: 'ထိုင်းမှ နိုင်ငံတကာသို့ ငွေလွှဲခြင်း — ဝန်ဆောင်ခနှင့် နှုန်းထားများ နှိုင်းယှဉ်ချက်',
+      body: 'ထိုင်းမှ မြန်မာ၊ လာအို၊ ကမ္ဘောဒီးယားသို့ ဒေသတွင်း ငွေလွှဲလုပ်ငန်းများအကြောင်း လမ်းညွှန်။ ဝန်ဆောင်ခနှင့် လဲလှယ်နှုန်းများကို နှိုင်းယှဉ်တွက်ချက်ပါ။',
       cardsHeading: 'ငွေလွှဲတွက်ချက်ရန်သုံးသောအတွဲများ',
       cards: [
         { title: 'THB/MMK', body: 'မြန်မာသို့လွှဲငွေအတွက် လက်ခံရမည့်ပမာဏခန့်မှန်းရန်', href: '/thb-mmk' },
@@ -240,15 +249,18 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
         { title: 'THB/LAK', body: 'ဒေသတွင်းနှုန်းနှိုင်းယှဉ်ရန်', href: '/thb-lak' },
       ],
       linksHeading: 'ငွေလွှဲနှင့်သက်ဆိုင်သောနှုန်းများ',
-      contentHeading: 'ငွေလွှဲကုန်ကျစရိတ်တွက်ချက်နည်း',
-      paragraphs: ['ငွေလွှဲကုန်ကျစရိတ်တွင် ဖော်ပြထားသောဝန်ဆောင်ခအပြင် ငွေလဲနှုန်းကွာဟချက်လည်းပါဝင်သည်', 'မလွှဲမီ လက်ခံသူရမည့်ပမာဏကို zrate.io ပေါ်ရှိကိုးကားနှုန်းနှင့် နှိုင်းယှဉ်သင့်သည်'],
+      contentHeading: 'ငွေလွှဲကုန်ကျစရိတ်အမှန်ကို တွက်ချက်ခြင်း',
+      paragraphs: [
+        'ငွေလွှဲရာတွင် ဝန်ဆောင်ခအပြင် ငွေလဲနှုန်းကွာဟချက် (Rate Margin) လည်းပါဝင်သဖြင့် ၎င်းနှစ်ခုလုံးကို တွက်ချက်ရမည်ဖြစ်သည်။',
+        'မလွှဲမီ zrate.io ရှိ ကိုးကားနှုန်းနှင့် နှိုင်းယှဉ်တွက်ချက်ပြီး အသက်သာဆုံးလမ်းကြောင်းကို ရှာဖွေပါ။'
+      ],
     },
     km: {
-      title: 'មគ្គុទ្ទេសក៍ផ្ទេរប្រាក់អន្តរជាតិ',
-      description: 'មគ្គុទ្ទេសក៍ផ្ទេរប្រាក់ និងប្រៀបធៀបអត្រាសម្រាប់ថៃ ឡាវ មីយ៉ាន់ម៉ា និងកម្ពុជា',
+      title: 'ផ្ទេរប្រាក់ទៅបរទេសពីថៃ ប្រៀបធៀបថ្លៃសេវានិងអត្រា ២០២៦',
+      description: 'មគ្គុទ្ទេសក៍ផ្ទេរប្រាក់ពីថៃទៅឡាវ មីយ៉ាន់ម៉ា កម្ពុជា ប្រៀបធៀបថ្លៃសេវាពិតប្រាកដ និងចន្លោះអត្រាប្តូរប្រាក់របស់អ្នកផ្តល់សេវាផ្ទេរប្រាក់',
       eyebrow: 'Money transfer guide',
-      heading: 'មុនផ្ទេរប្រាក់ គួរប្រៀបធៀបទាំងថ្លៃសេវា និងអត្រាប្តូរ',
-      body: 'មជ្ឈមណ្ឌលសម្រាប់អត្ថបទផ្ទេរប្រាក់ និងទំព័រអត្រាដែលពាក់ព័ន្ធនៅក្នុងតំបន់',
+      heading: 'ផ្ទេរប្រាក់ទៅបរទេសពីថៃទៅឡាវ មីយ៉ាន់ម៉ា កម្ពុជា — ប្រៀបធៀបថ្លៃសេវានិងអត្រា',
+      body: 'មគ្គុទ្ទេសក៍ និងប្រព័ន្ធផ្ទេរប្រាក់ក្នុងតំបន់ ជួយឱ្យលោកអ្នកគណនាថ្លៃសេវាផ្ទេរពិតប្រាកដ និងជ្រើសរើសច្រកផ្ទេរប្រាក់ដែលចំណេញបំផុត',
       cardsHeading: 'គូរូបិយប័ណ្ណសម្រាប់គណនាការផ្ទេរ',
       cards: [
         { title: 'THB/KHR', body: 'ប៉ាន់ស្មានចំនួនប្រាក់ទទួលសម្រាប់ថៃ-កម្ពុជា', href: '/thb-khr' },
@@ -256,8 +268,11 @@ export const HUB_TEXT: Record<HubPageKey, Record<LanguageCode, {
         { title: 'THB/MMK', body: 'យោងសម្រាប់ការផ្ទេរទៅមីយ៉ាន់ម៉ា', href: '/thb-mmk' },
       ],
       linksHeading: 'អត្រាដែលពាក់ព័ន្ធនឹងការផ្ទេរ',
-      contentHeading: 'របៀបគណនាថ្លៃដើមផ្ទេរប្រាក់',
-      paragraphs: ['ថ្លៃដើមសរុបរួមមានថ្លៃសេវា និងភាពខុសគ្នានៃអត្រាប្តូរប្រាក់', 'មុនផ្ទេរ គួរប្រៀបធៀបចំនួនប្រាក់ដែលអ្នកទទួលនឹងបានជាមួយអត្រាយោងនៅ zrate.io'],
+      contentHeading: 'របៀបគណនាថ្លៃដើមផ្ទេរប្រាក់ពិតប្រាកដ',
+      paragraphs: [
+        'ថ្លៃសេវាផ្ទេរសរុបរួមមាន ថ្លៃសេវាផ្ទាល់ និងចន្លោះអត្រាប្តូរប្រាក់ (Exchange Rate Margin) ដែលអ្នកផ្តល់សេវាបានគិតបន្ថែម។',
+        'មុនផ្ទេរប្រាក់ សូមប្រៀបធៀបចំនួនប្រាក់ដែលអ្នកទទួលបានជាក់ស្តែង ជាមួយអត្រាយោងនៅលើ zrate.io ដើម្បីជ្រើសរើសច្រកផ្ទេរប្រាក់ដែលល្អបំផុត។'
+      ],
     },
   },
   privacy: {

@@ -82,20 +82,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 }
 
-async function fetchInitialRates(base: string): Promise<Record<string, number>> {
-  try {
-    const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`, {
-      next: { revalidate: 300 } // cache for 5 minutes
-    })
-    if (!res.ok) throw new Error('API down')
-    const data = await res.json()
-    const rates = data.rates || {}
-    rates['USDT'] = rates['USD'] || 1
-    return rates
-  } catch (err) {
-    console.error('Failed to pre-fetch rates on server', err)
-    return {}
-  }
+import { fetchRates, fetchHistoricalRates, fetchCurrencyNews } from '../../lib/ratesService'
+
+const DEFAULT_PAIR: Record<LanguageCode, { base: string; quote: string }> = {
+  th: { base: 'USD', quote: 'THB' },
+  en: { base: 'EUR', quote: 'USD' },
+  lo: { base: 'THB', quote: 'LAK' },
+  my: { base: 'THB', quote: 'MMK' },
+  km: { base: 'THB', quote: 'KHR' },
 }
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
@@ -103,13 +97,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const lang = (LOCALES.includes(resolvedParams.locale) ? resolvedParams.locale : 'th') as LanguageCode
   const baseCurrency = DEFAULT_CURRENCY[lang] || 'THB'
   
-  const initialRates = await fetchInitialRates(baseCurrency)
+  const { rates: initialRates } = await fetchRates(baseCurrency)
+
+  const chartPair = DEFAULT_PAIR[lang] || { base: 'USD', quote: 'THB' }
+  
+  // Fetch historical rates (365 days) and news for default pair
+  const history = await fetchHistoricalRates(chartPair.base, chartPair.quote, 365)
+  const news = await fetchCurrencyNews(chartPair.base, chartPair.quote)
 
   return (
     <HomeClient
       locale={lang}
       initialBase={baseCurrency}
       initialRates={initialRates}
+      history={history}
+      news={news}
+      chartBase={chartPair.base}
+      chartQuote={chartPair.quote}
     />
   )
 }

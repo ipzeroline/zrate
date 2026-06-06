@@ -18,12 +18,12 @@
   min-height: 90px;
 }
 
-.mobileBanner {
-  min-height: 50px;
+.mobileRectangleBanner {
+  min-height: 250px;
 }
 
 .pendingBanner {
-  min-height: 50px;
+  min-height: 250px;
 }
 
 .nativeShell {

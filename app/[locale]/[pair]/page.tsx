@@ -1,4 +1,8 @@
 import Link from 'next/link'
+import { fetchRates, fetchHistoricalRates, fetchCurrencyNews } from '../../../lib/ratesService'
+import { InteractiveChart } from './InteractiveChart'
+import { AseanDashboard } from './AseanDashboard'
+import { NewsFeed } from './NewsFeed'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { NativeBannerAd, ResponsiveBannerAd } from '../../components/AdsterraAds'
@@ -7,7 +11,7 @@ import { PairTopBar } from './PairTopBar'
 import { getPairContent } from './pairContent'
 import styles from './page.module.css'
 
-type CurrencyCode = 'USD' | 'EUR' | 'USDT' | 'THB' | 'LAK' | 'MMK' | 'KHR' | 'JPY' | 'CNY' | 'SGD' | 'KRW'
+type CurrencyCode = 'USD' | 'EUR' | 'USDT' | 'THB' | 'LAK' | 'MMK' | 'KHR' | 'JPY' | 'CNY' | 'SGD' | 'KRW' | 'GBP' | 'AUD' | 'CAD' | 'CHF' | 'HKD' | 'MYR' | 'VND' | 'IDR' | 'PHP' | 'INR' | 'NZD' | 'SEK' | 'NOK' | 'DKK' | 'BRL' | 'MXN' | 'ZAR' | 'RUB' | 'TRY' | 'SAR' | 'AED' | 'PLN' | 'CZK' | 'HUF' | 'ILS' | 'PKR' | 'EGP' | 'NGN' | 'TWD'
 type LanguageCode = 'th' | 'en' | 'lo' | 'my' | 'km'
 
 const SITE_URL = 'https://zrate.io'
@@ -22,38 +26,208 @@ const LOCALE_BY_LANGUAGE: Record<LanguageCode, string> = {
 }
 
 const PAIRS = [
-  'usd-thb',
-  'usd-lak',
-  'usd-mmk',
-  'usd-khr',
+  'aed-thb',
+  'aed-usd',
+  'aud-thb',
+  'aud-usd',
+  'brl-thb',
+  'brl-usd',
+  'cad-thb',
+  'cad-usd',
+  'chf-thb',
+  'chf-usd',
+  'cny-thb',
+  'cny-usd',
+  'czk-thb',
+  'czk-usd',
+  'dkk-thb',
+  'dkk-usd',
+  'egp-thb',
+  'egp-usd',
+  'eur-gbp',
+  'eur-jpy',
   'eur-thb',
   'eur-usd',
-  'thb-usd',
+  'gbp-thb',
+  'gbp-usd',
+  'hkd-thb',
+  'hkd-usd',
+  'huf-thb',
+  'huf-usd',
+  'idr-thb',
+  'idr-usd',
+  'ils-thb',
+  'ils-usd',
+  'inr-thb',
+  'inr-usd',
+  'jpy-thb',
+  'jpy-usd',
+  'khr-thb',
+  'khr-usd',
+  'krw-thb',
+  'krw-usd',
+  'lak-thb',
+  'lak-usd',
+  'mmk-thb',
+  'mmk-usd',
+  'mxn-thb',
+  'mxn-usd',
+  'myr-lak',
+  'myr-mmk',
+  'myr-thb',
+  'myr-usd',
+  'ngn-thb',
+  'ngn-usd',
+  'nok-thb',
+  'nok-usd',
+  'nzd-thb',
+  'nzd-usd',
+  'php-thb',
+  'php-usd',
+  'pkr-thb',
+  'pkr-usd',
+  'pln-thb',
+  'pln-usd',
+  'rub-thb',
+  'rub-usd',
+  'sar-thb',
+  'sar-usd',
+  'sek-thb',
+  'sek-usd',
+  'sgd-myr',
+  'sgd-thb',
+  'sgd-usd',
+  'thb-aed',
+  'thb-aud',
+  'thb-brl',
+  'thb-cad',
+  'thb-chf',
+  'thb-cny',
+  'thb-czk',
+  'thb-dkk',
+  'thb-egp',
+  'thb-eur',
+  'thb-gbp',
+  'thb-hkd',
+  'thb-huf',
+  'thb-idr',
+  'thb-ils',
+  'thb-inr',
+  'thb-jpy',
+  'thb-khr',
+  'thb-krw',
   'thb-lak',
   'thb-mmk',
-  'thb-khr',
-  'thb-jpy',
-  'thb-cny',
+  'thb-mxn',
+  'thb-myr',
+  'thb-ngn',
+  'thb-nok',
+  'thb-nzd',
+  'thb-php',
+  'thb-pkr',
+  'thb-pln',
+  'thb-rub',
+  'thb-sar',
+  'thb-sek',
+  'thb-sgd',
+  'thb-try',
+  'thb-twd',
+  'thb-usd',
+  'thb-usdt',
+  'thb-vnd',
+  'thb-zar',
+  'try-thb',
+  'try-usd',
+  'twd-thb',
+  'twd-usd',
+  'usd-aed',
+  'usd-aud',
+  'usd-brl',
+  'usd-cad',
+  'usd-chf',
+  'usd-cny',
+  'usd-czk',
+  'usd-dkk',
+  'usd-egp',
+  'usd-eur',
+  'usd-gbp',
+  'usd-hkd',
+  'usd-huf',
+  'usd-idr',
+  'usd-ils',
+  'usd-inr',
+  'usd-jpy',
+  'usd-khr',
+  'usd-krw',
+  'usd-lak',
+  'usd-mmk',
+  'usd-mxn',
+  'usd-myr',
+  'usd-ngn',
+  'usd-nok',
+  'usd-nzd',
+  'usd-php',
+  'usd-pkr',
+  'usd-pln',
+  'usd-rub',
+  'usd-sar',
+  'usd-sek',
+  'usd-sgd',
+  'usd-thb',
+  'usd-try',
+  'usd-twd',
+  'usd-vnd',
+  'usd-zar',
   'usdt-thb',
   'usdt-usd',
-  'jpy-thb',
-  'cny-thb',
-  'sgd-thb',
-  'krw-thb',
+  'vnd-thb',
+  'vnd-usd',
+  'zar-thb',
+  'zar-usd'
 ] as const
 
 const CURRENCY_NAMES: Record<CurrencyCode, Record<LanguageCode, string>> = {
-  USD: { th: 'ดอลลาร์สหรัฐ', en: 'US dollar', lo: 'ໂດລາສະຫະລັດ', my: 'အမေရိကန်ဒေါ်လာ', km: 'ដុល្លារអាមេរិក' },
-  EUR: { th: 'ยูโร', en: 'euro', lo: 'ເອີໂຣ', my: 'ယူရို', km: 'អឺរ៉ូ' },
-  USDT: { th: 'USDT', en: 'USDT', lo: 'USDT', my: 'USDT', km: 'USDT' },
-  THB: { th: 'บาทไทย', en: 'Thai baht', lo: 'ບາດໄທ', my: 'ထိုင်းဘတ်', km: 'ប្រាក់បាតថៃ' },
-  LAK: { th: 'กีบลาว', en: 'Lao kip', lo: 'ກີບລາວ', my: 'လာအိုကျပ်', km: 'គីបឡាវ' },
-  MMK: { th: 'จ๊าตเมียนมา', en: 'Myanmar kyat', lo: 'ຈາດມຽນມາ', my: 'မြန်မာကျပ်', km: 'គ្យាតមីយ៉ាន់ម៉ា' },
-  KHR: { th: 'เรียลกัมพูชา', en: 'Cambodian riel', lo: 'ຣຽວກຳປູເຈຍ', my: 'ကမ္ဘောដီးយားរីយယ်', km: 'រៀលកម្ពុជា' },
-  JPY: { th: 'เยนญี่ปุ่น', en: 'Japanese yen', lo: 'ເຢນຍີ່ປຸ່ນ', my: 'ဂျပန်ယန်း', km: 'យ៉េនជប៉ុន' },
-  CNY: { th: 'หยวนจีน', en: 'Chinese yuan', lo: 'ຢວນຈີນ', my: 'တရုတ်ယွမ်', km: 'យន់ចិន' },
-  SGD: { th: 'ดอลลาร์สิงคโปร์', en: 'Singapore dollar', lo: 'ໂດລາສິງກະໂປ', my: 'စင်ကာပူဒေါ်လာ', km: 'ដុល្លារសិង្ហបុរី' },
-  KRW: { th: 'วอนเกาหลี', en: 'Korean won', lo: 'ວອນເກົາຫຼີ', my: 'ကိုရီးယားဝမ်', km: 'វ៉ុនកូរ៉េ' },
+  USD: { th: 'ดอลลาร์สหรัฐ', en: 'US Dollar', lo: 'ໂດລາສະຫະລັດ', my: 'အမေရိကန်ဒေါ်လာ', km: 'ដុល្លារអាមេរិក' },
+  EUR: { th: 'ยูโร', en: 'Euro', lo: 'ເອີໂຣ', my: 'ယူရို', km: 'អឺរ៉ូ' },
+  GBP: { th: 'ปอนด์สเตอร์ลิง', en: 'British Pound', lo: 'ປອນສະເຕີລິງ', my: 'ဗြိတိသျှပေါင်', km: 'ផោនស្ទឺលីង' },
+  AUD: { th: 'ดอลลาร์ออสเตรเลีย', en: 'Australian Dollar', lo: 'ໂດລາອົດສະຕຣາລີ', my: 'ဩစតြေးလျဒေါ်လာ', km: 'ដុល្លារអូស្ត្រាលី' },
+  JPY: { th: 'เยนญี่ปุ่น', en: 'Japanese Yen', lo: 'ເຢນຍີ່ປຸ່ນ', my: 'ဂျပန်ယန်း', km: 'យ៉េនជប៉ុន' },
+  CNY: { th: 'หยวนจีน', en: 'Chinese Yuan', lo: 'ຢວນຈີນ', my: 'တရုတ်ယွမ်', km: 'យន់ចិន' },
+  SGD: { th: 'ดอลลาร์สิงคโปร์', en: 'Singapore Dollar', lo: 'ໂດລາສิงກະໂປ', my: 'စင်ကာပူဒေါ်လာ', km: 'ដុល្លារសិង្ហបុរី' },
+  LAK: { th: 'กีบลาว', en: 'Lao Kip', lo: 'ກີບລາວ', my: 'လာအိုကျပ်', km: 'គីបឡាវ' },
+  MMK: { th: 'จ๊าตเมียนมา', en: 'Myanmar Kyat', lo: 'ຈາດມຽนມາ', my: 'မြန်မာကျပ်', km: 'គ្យាតមីយ៉ាន់ម៉ា' },
+  KHR: { th: 'เรียลกัมพูชา', en: 'Cambodian Riel', lo: 'ຣຽວກຳປູເຈຍ', my: 'ကမ္ဘောဒီးយားရីယယ်', km: 'រៀលកម្ពុជា' },
+  KRW: { th: 'วอนเกาหลีใต้', en: 'South Korean Won', lo: 'ວອນເກົາຫຼີໃຕ້', my: 'တောင်ကိုရီးယားဝမ်', km: 'វ៉ុនកូរ៉េខាងត្បូង' },
+  HKD: { th: 'ดอลลาร์ฮ่องกง', en: 'Hong Kong Dollar', lo: 'ໂດລາຮົງກົງ', my: 'ဟောင်កောင်ဒေါ်လာ', km: 'ដុល្លារហុងកុង' },
+  CAD: { th: 'ดอลลาร์แคนาดา', en: 'Canadian Dollar', lo: 'ໂດລາແຄนນາດາ', my: 'ကနေဒါဒေါ်လာ', km: 'ដុល្លារកាណាដា' },
+  CHF: { th: 'ฟรังก์สวิส', en: 'Swiss Franc', lo: 'ຟຣັງສະວິດ', my: 'ဆွတ်ဇាលັນဖရန့်', km: 'ហ្វ្រង់ស្វីស' },
+  NZD: { th: 'ดอลลาร์นิวซีแลนด์', en: 'New Zealand Dollar', lo: 'ໂດລານิวຊີແລນ', my: 'နယူးဇီလန်ဒေါ်လာ', km: 'ដុល្លារនូវែលសេឡង់' },
+  SEK: { th: 'โครนาสวีเดน', en: 'Swedish Krona', lo: 'ສະວີເດັນໂຄຣນາ', my: 'ဆွီဒင်ခရိုနာ', km: 'ក្រូនស៊ុយអែត' },
+  NOK: { th: 'โครนนอร์เวย์', en: 'Norwegian Krone', lo: 'ນໍເວໂຄຣນ', my: 'နော်ဝေခရိုနီ', km: 'ក្រូនន័រវែស' },
+  DKK: { th: 'โครนเดนมาร์ก', en: 'Danish Krone', lo: 'ເດນມາກໂຄຣນ', my: 'ဒိန်းမတ်ခရိုနီ', km: 'ក្រូនដាណឺម៉ាក' },
+  INR: { th: 'รูปีอินเดีย', en: 'Indian Rupee', lo: 'ຣູປີອີນເດຍ', my: 'အိန္ဒိယရူပီး', km: 'រូពីឥណ្ឌា' },
+  IDR: { th: 'รูเปียห์อินโดนีเซีย', en: 'Indonesian Rupiah', lo: 'ຣູເປຍອინໂດເນເຊຍ', my: 'အင်ဒိုនီးရှားရူပီးယား', km: 'រូព្យ៉ាឥណ្ឌូនេស៊ី' },
+  MYR: { th: 'ริงกิตมาเลเซีย', en: 'Malaysian Ringgit', lo: 'ຣิงກິດມາເລເຊຍ', my: 'မလေးရှားရင်းဂစ်', km: 'រីងហ្គីតម៉ាឡេស៊ី' },
+  PHP: { th: 'เปโซฟิลิปปินส์', en: 'Philippine Peso', lo: 'ເປໂซຟີລິບປິນ', my: 'ဖိလစ်ပိုင်ပီဆို', km: 'ប៉េសូហ្វីលីពីន' },
+  VND: { th: 'ดงเวียดนาม', en: 'Vietnamese Dong', lo: 'ດົງຫວຽດນາມ', my: 'ဗီယက်နမ်ဒေါင်', km: 'ដុងវៀតណាម' },
+  TWD: { th: 'ดอลลาร์ไต้หวันใหม่', en: 'New Taiwan Dollar', lo: 'ໄຕ້ຫວັນໂດລາ', my: 'တိုင်ဝမ်ဒေါ်လာအသစ်', km: 'ដុល្លារតៃវ៉ាន់ថ្មី' },
+  BRL: { th: 'เรียลบราซิล', en: 'Brazilian Real', lo: 'ບຣາຊິນຣຽວ', my: 'ဘရာဇီးရီးယယ်', km: 'រៀលប្រេស៊ីល' },
+  MXN: { th: 'เปโซเม็กซิโก', en: 'Mexican Peso', lo: 'ເມັກຊິໂກເປໂຊ', my: 'မက္ကဆီကိုပီဆို', km: 'ប៉េសូម៉ិកស៊ិក' },
+  ZAR: { th: 'แรนด์แอฟริกาใต้', en: 'South African Rand', lo: 'ອາຟຣິກາໃຕ້ແຣນ', my: 'တောင်အာဖရိကရန်း', km: 'រ៉ង់អាហ្វ្រិកខាងត្បូង' },
+  RUB: { th: 'รูเบิลรัสเซีย', en: 'Russian Ruble', lo: 'ຣັດເຊຍຣູເບິລ', my: 'ရုရှားရူဘယ်', km: 'រូបរុស្ស៊ី' },
+  TRY: { th: 'ลีราตุรกี', en: 'Turkish Lira', lo: 'ຕວກກີລີຣາ', my: 'တူရကီလီရာ', km: 'លីរ៉ាទួកគី' },
+  SAR: { th: 'ริยัลซาอุดีอาระเบีย', en: 'Saudi Riyal', lo: 'ຊາອຸດີຣິຢັນ', my: 'ဆော်ဒီရီယယ်', km: 'រីយ៉ាល់អារ៉ាប៊ីសាអូឌីត' },
+  AED: { th: 'ดีแรฮมสหรัฐอาหรับเอมิเรตส์', en: 'UAE Dirham', lo: 'ສະຫະລັດອາຣັບເອມิເຣດດີແຣມ', my: 'ယူအေအီးဒီရဟမ်', km: 'ឌីរហាមអេមីរ៉ាតអារ៉ាប់រួម' },
+  PLN: { th: 'สลอตีโปแลนด์', en: 'Polish Zloty', lo: 'ໂποແລນຊະລໍຕີ', my: 'ပိုလန်ဇလော့တီ', km: 'ហ្ស្លូទីប៉ូឡូញ' },
+  CZK: { th: 'โครูนาสาธารณรัฐเช็ก', en: 'Czech Koruna', lo: 'ສາທາລະນະລັດເຊັກໂຄຣູນາ', my: 'ချက်ကိုရူနာ', km: 'កូរូណាឆែក' },
+  HUF: { th: 'ฟอรินต์ฮังการี', en: 'Hungarian Forint', lo: 'ຮັງກາຣີຟໍຣິນ', my: 'ဟန်ဂေရီဖိုးရင့်', km: 'ហ្វូរីនហុងគ្រី' },
+  ILS: { th: 'เชเกลอิสราเอล', en: 'Israeli Shekel', lo: 'ອິດສະຣາແອນເຊເກລ', my: 'အစ္စရေးရှီကယ်', km: 'ស៊ីគែលអ៊ីស្រាអែល' },
+  PKR: { th: 'รูปีปากีสถาน', en: 'Pakistani Rupee', lo: 'ປາກີສະຖານຣູປີ', my: 'ပါကစ္စတန်ရူပီး', km: 'រូពីប៉ាគីស្ថាន' },
+  EGP: { th: 'ปอนด์อียิปต์', en: 'Egyptian Pound', lo: 'ອີຢິບປອນ', my: 'အီဂျစ်ပေါင်', km: 'ផោនអេស៊ីប' },
+  NGN: { th: 'ไนราไนจีเรีย', en: 'Nigerian Naira', lo: 'ໄນຈີເລຍໄນຣา', my: 'နိုင်ဂျီးရီးယားနိုင်ရာ', km: 'ណៃរ៉ានីហ្សេរីយ៉ា' },
+  USDT: { th: 'เทเธอร์ (USDT)', en: 'Tether (USDT)', lo: 'Tether (USDT)', my: 'USDT (Tether)', km: 'Tether (USDT)' },
+  THB: { th: 'บาทไทย', en: 'Thai Baht', lo: 'ບາດໄທ', my: 'ထိုင်းဘတ်', km: 'ប្រាក់បាតថៃ' },
+
 }
 
 const PAGE_TEXT: Record<LanguageCode, {
@@ -151,17 +325,46 @@ const META_KEYWORDS: Record<LanguageCode, string[]> = {
 }
 
 const USD_RATES: Record<CurrencyCode, number> = {
-  USD: 1,
-  EUR: 0.92,
-  USDT: 1,
-  THB: 35.2,
-  LAK: 21000,
-  MMK: 2100,
-  KHR: 4100,
-  JPY: 149.5,
+  AED: 3.67,
+  AUD: 1.5,
+  BRL: 5.2,
+  CAD: 1.37,
+  CHF: 0.9,
   CNY: 7.24,
+  CZK: 23.0,
+  DKK: 6.9,
+  EGP: 47.5,
+  EUR: 0.92,
+  GBP: 0.79,
+  HKD: 7.82,
+  HUF: 365.0,
+  IDR: 16300.0,
+  ILS: 3.7,
+  INR: 83.5,
+  JPY: 149.5,
+  KHR: 4100.0,
+  KRW: 1325.0,
+  LAK: 21000.0,
+  MMK: 2100.0,
+  MXN: 18.0,
+  MYR: 4.71,
+  NGN: 1500.0,
+  NOK: 10.6,
+  NZD: 1.63,
+  PHP: 58.5,
+  PKR: 278.0,
+  PLN: 4.0,
+  RUB: 90.0,
+  SAR: 3.75,
+  SEK: 10.5,
   SGD: 1.34,
-  KRW: 1325,
+  THB: 35.2,
+  TRY: 32.5,
+  TWD: 32.3,
+  USD: 1.0,
+  USDT: 1.0,
+  VND: 25400.0,
+  ZAR: 18.5,
 }
 
 const EXAMPLE_AMOUNTS = [1, 10, 100, 1000]
@@ -403,11 +606,24 @@ export default async function PairPage({ params }: { params: Promise<{ locale: s
   const indicativeRate = rate
   const updatedDate = dateStr
 
+  // Fetch historical rates (365 days) and live currency news
+  const history = await fetchHistoricalRates(parsed.base, parsed.quote, 365)
+  const news = await fetchCurrencyNews(parsed.base, parsed.quote)
+
+  const history30d = history.slice(-30)
+  const ratesArray = history30d.map(p => p.rate)
+
   const statsText = STATS_TEXT[lang] || STATS_TEXT.th
-  const high30d = rate * 1.025
-  const low30d = rate * 0.975
-  const avg30d = rate * 1.002
+  const high30d = ratesArray.length > 0 ? Math.max(...ratesArray) : rate * 1.025
+  const low30d = ratesArray.length > 0 ? Math.min(...ratesArray) : rate * 0.975
+  const avg30d = ratesArray.length > 0 ? ratesArray.reduce((sum, r) => sum + r, 0) / ratesArray.length : rate * 1.002
   const getVolatility = () => {
+    if (ratesArray.length > 0) {
+      const pctRange = ((high30d - low30d) / avg30d) * 100
+      if (pctRange > 5) return statsText.volatilityHigh
+      if (pctRange > 2) return statsText.volatilityMed
+      return statsText.volatilityLow
+    }
     if (['usd-thb', 'usdt-thb', 'eur-usd'].includes(resolvedParams.pair)) return statsText.volatilityLow
     if (['thb-lak', 'thb-mmk', 'usd-lak', 'usd-mmk'].includes(resolvedParams.pair)) return statsText.volatilityHigh
     return statsText.volatilityMed
@@ -512,6 +728,28 @@ export default async function PairPage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
+      {history.length > 0 && (
+        <section className={styles.chartSection} aria-label="Exchange Rate Chart">
+          <div className={styles.chartHeader}>
+            <h3>
+              {lang === 'th' ? `กราฟประวัติอัตราแลกเปลี่ยน ${parsed.base}/${parsed.quote}`
+               : lang === 'en' ? `${parsed.base}/${parsed.quote} Historical Rate Chart`
+               : lang === 'lo' ? `ກຣາບປະຫວັດອັດຕາແລກປ່ຽນ ${parsed.base}/${parsed.quote}`
+               : lang === 'my' ? `${parsed.base}/${parsed.quote} ငွေလဲနှုန်းပြောင်းလဲမှုဇယား`
+               : `គំនូសតាងប្រវត្តិនៃអត្រាប្តូរប្រាក់ ${parsed.base}/${parsed.quote}`}
+            </h3>
+            <div className={styles.chartSub}>
+              {lang === 'th' ? `แสดงความเคลื่อนไหวและมูลค่าของสกุลเงิน ${parsed.base} เทียบกับ ${parsed.quote} ตามช่วงเวลา`
+               : lang === 'en' ? `Shows value fluctuations of ${parsed.base} against ${parsed.quote} over selected time periods`
+               : lang === 'lo' ? `ສະແດງການເຫນັງຕີງ ແລະມູນຄ່າຂອງສະກຸນເງິນ ${parsed.base} ທຽບກັບ ${parsed.quote} ຕາມໄລຍะເວລາ`
+               : lang === 'my' ? `သတ်မှတ်ထားသော ကာလအပိုင်းအခြားအလိုက် ${parsed.base} နှင့် ${parsed.quote} ငွေလဲနှုန်း အပြောင်းအလဲများကို ဖော်ပြချက်`
+               : `បង្ហាញការប្រែប្រួលតម្លៃនៃ ${parsed.base} ធៀបនឹង ${parsed.quote} ទៅតាមរយៈពេលកំណត់`}
+            </div>
+          </div>
+          <InteractiveChart history={history} lang={lang} baseSymbol={parsed.base} quoteSymbol={parsed.quote} />
+        </section>
+      )}
+
       <section className={styles.summaryGrid} aria-label={pageText.summaryAria}>
         <div className={styles.summaryCard}>
           <span className={styles.summaryLabel}>{pageText.pairLabel}</span>
@@ -591,9 +829,11 @@ export default async function PairPage({ params }: { params: Promise<{ locale: s
             </table>
           </div>
         </div>
-      </section>
+            </section>
 
-      <NativeBannerAd />
+      <AseanDashboard lang={lang} />
+
+      <NewsFeed news={news} lang={lang} baseSymbol={parsed.base} quoteSymbol={parsed.quote} />  <NativeBannerAd />
 
       <section className={styles.langGrid} aria-label={`${pageText.languageSuffix} ${parsed.base}/${parsed.quote}`}>
         <article className={styles.contentCard} lang={lang}>

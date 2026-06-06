@@ -44,7 +44,7 @@ const CONTACT_CONTENT: Record<LanguageCode, ContactContentBlock> = {
     subheading: 'หากคุณมีข้อสงสัย พบปัญหาการใช้งาน หรือต้องการเสนอแนะบริการ ยินดีรับฟังเสมอ',
     intro: 'zrate.io ดำเนินการโดยอิสระเพื่อนำเสนอข้อมูลที่เป็นประโยชน์และมีความโปร่งใสทางการเงิน คุณสามารถติดต่อเราได้โดยตรงผ่านช่องทางต่อไปนี้',
     emailLabel: 'อีเมลหลักสำหรับการติดต่อ:',
-    emailValue: 'support@zrate.io',
+    emailValue: 'funmask101@gmail.com',
     responseLabel: 'เวลาการตอบกลับเฉลี่ย:',
     responseValue: 'ภายใน 24-48 ชั่วโมง (วันทำการ)',
     channelsHeading: 'การติดต่อสนับสนุนตามเรื่อง',
@@ -78,7 +78,7 @@ const CONTACT_CONTENT: Record<LanguageCode, ContactContentBlock> = {
     subheading: 'Have a question, feedback, or found a bug? We are here to help.',
     intro: 'zrate.io operates independently to deliver transparent and reliable financial reference tools. You can reach out directly via our main communication channels below.',
     emailLabel: 'Direct Support Email:',
-    emailValue: 'support@zrate.io',
+    emailValue: 'funmask101@gmail.com',
     responseLabel: 'Average Response Time:',
     responseValue: '24-48 hours (during business days)',
     channelsHeading: 'Support Segmentation',
@@ -112,7 +112,7 @@ const CONTACT_CONTENT: Record<LanguageCode, ContactContentBlock> = {
     subheading: 'ຫາກທ່ານມີຂໍ້ສົງໄສ, ພົບຂໍ້ຜິດພາດ ຫຼື ຕ້ອງການສະເໜີແນະລະບົບ ພວກເຮົາຍິນດີຮັບຟັງສະໝີ',
     intro: 'zrate.io ດຳເນີນງານໂດຍອິດສະຫຼະເພື່ອສະເໜີຂໍ້ມູນອັດຕາແລກປ່ຽນທີ່ໂປ່ງໃສ. ທ່ານສາມາດຕິດຕໍ່ຫາພວກເຮົາໄດ້ໂດຍກົງຕາມລາຍລະອຽດລຸ່ມນີ້.',
     emailLabel: 'ອີເມວຕິດຕໍ່ຫຼັກ:',
-    emailValue: 'support@zrate.io',
+    emailValue: 'funmask101@gmail.com',
     responseLabel: 'ເວລາຕອບກັບສະເລ່ຍ:',
     responseValue: 'ພາຍໃນ 24-48 ຊົ່ວໂມງ (ວັນທຳການ)',
     channelsHeading: 'Consolidated Channels',
@@ -146,7 +146,7 @@ const CONTACT_CONTENT: Record<LanguageCode, ContactContentBlock> = {
     subheading: 'မေးမြန်းလိုသည်များ၊ စနစ်ချို့ယွင်းချက်များ သို့မဟုတ် အကြံပြုချက်များရှိပါက ဆက်သွယ်နိုင်ပါသည်။',
     intro: 'zrate.io သည် ပွင့်လင်းမြင်သာသော ဘဏ္ဍာရေးကိုးကားချက်များကို လွတ်လပ်စွာဖော်ပြပေးနေသည့် စနစ်ဖြစ်ပြီး အောက်ပါလမ်းကြောင်းများမှ တိုက်ရိုက်ဆက်သွယ်နိုင်ပါသည်။',
     emailLabel: 'အဓိက ဆက်သွယ်ရန် အီးမေးလ်:',
-    emailValue: 'support@zrate.io',
+    emailValue: 'funmask101@gmail.com',
     responseLabel: 'ပျမ်းမျှ တုံ့ပြန်ချိန်:',
     responseValue: '၂၄ နာရီမှ ၄၈ နာရီအတွင်း (ရုံးဖွင့်ရက်များ)',
     channelsHeading: 'ပံ့ပိုးမှုအမျိုးအစားများ',
@@ -180,7 +180,7 @@ const CONTACT_CONTENT: Record<LanguageCode, ContactContentBlock> = {
     subheading: 'ប្រសិនបើលោកអ្នកមានសំណួរ ជួបបញ្ហា ឬចង់ផ្តល់មតិកែលម្អ យើងរីករាយនឹងទទួលស្តាប់ជានិច្ច',
     intro: 'zrate.io ដំណើរការដោយឯករាជ្យដើម្បីផ្តល់ព័ត៌មានអត្រាប្តូរប្រាក់ប្រកបដោយតម្លាភាព។ លោកអ្នកអាចទាក់ទងមកកាន់យើងផ្ទាល់តាមរយៈព័ត៌មានខាងក្រោម។',
     emailLabel: 'អ៊ីមែលទំនាក់ទំនងចម្បង៖',
-    emailValue: 'support@zrate.io',
+    emailValue: 'funmask101@gmail.com',
     responseLabel: 'រយៈពេលឆ្លើយតបជាមធ្យម៖',
     responseValue: 'ក្នុងរយៈពេល 24-48 ម៉ោង (ថ្ងៃធ្វើការ)',
     channelsHeading: 'ផ្នែកគាំទ្រតាមប្រធានបទ',
@@ -285,7 +285,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
         'contactPoint': [
           {
             '@type': 'ContactPoint',
-            'email': 'support@zrate.io',
+            'email': 'funmask101@gmail.com',
             'contactType': 'customer support',
             'availableLanguage': ['TH', 'EN', 'LO', 'MY', 'KM']
           }

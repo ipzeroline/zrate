@@ -152,7 +152,7 @@ const GUIDE_CLUSTERS: Record<string, Array<{ title: string; desc: string; icon: 
     },
     {
       title: 'ປຽບທຽບອັດຕາແລກປ່ຽນ',
-      desc: 'ວິທີການກວດສອບອັດຕາຕະຫຼາດກາງ ແລະ ຄຳນວນສ່ວນຕ່າງຢ່າງລະອຽด.',
+      desc: 'ວິທີການກວດສອບອັດຕາຕະຫຼາດກາງ ແລະ ຄຳນວນສ່ວນຕ່າງຢ່າງລະອຽດ.',
       icon: 'rate',
     },
     {
