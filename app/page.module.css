@@ -230,7 +230,16 @@
   position: relative;
   display: flex;
   align-items: center;
+  gap: 8px;
   min-width: 0;
+}
+
+.languageSelectLabel {
+  color: var(--ink-dim);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .languageSelect {
@@ -1434,6 +1443,10 @@
 
   .languageSelectWrap {
     grid-column: 1 / -1;
+  }
+
+  .languageSelectLabel {
+    white-space: normal;
   }
 
   .statusBar {

@@ -22,6 +22,8 @@ const HEADER_TEXTS: Record<LanguageCode, {
   refresh: string
   switchToDark: string
   switchToLight: string
+  languageScope: string
+  languageHelp: string
   logoSub: string
 }> = {
   th: {
@@ -30,6 +32,8 @@ const HEADER_TEXTS: Record<LanguageCode, {
     refresh: 'อัปเดตเรทอัตราแลกเปลี่ยน',
     switchToDark: 'เปลี่ยนเป็นโหมดมืด',
     switchToLight: 'เปลี่ยนเป็นโหมดสว่าง',
+    languageScope: 'ภาษาเว็บ/บทความ',
+    languageHelp: 'เปลี่ยนภาษาเว็บไซต์และบทความ',
     logoSub: 'อัตราแลกเปลี่ยนเงินและเคล็ดลับการโอนเงิน',
   },
   en: {
@@ -38,6 +42,8 @@ const HEADER_TEXTS: Record<LanguageCode, {
     refresh: 'Refresh rates',
     switchToDark: 'Switch to dark theme',
     switchToLight: 'Switch to light theme',
+    languageScope: 'Site/article language',
+    languageHelp: 'Change website and article language',
     logoSub: 'Currency Rates & Remittance Insights',
   },
   lo: {
@@ -46,6 +52,8 @@ const HEADER_TEXTS: Record<LanguageCode, {
     refresh: 'ອັບເດດຂໍ້ມູ້ນ',
     switchToDark: 'ປ່ຽນເປັນໂຫມດມຶດ',
     switchToLight: 'ປ່ຽນເປັນໂຫມດແສງ',
+    languageScope: 'ພາສາເວັບ/ບົດຄວາມ',
+    languageHelp: 'ປ່ຽນພາສາເວັບໄຊ ແລະ ບົດຄວາມ',
     logoSub: 'ອັດຕາການດປ່ຽນເງິນ ແລະເຄັດລັບການໂອນເງິນ',
   },
   my: {
@@ -54,6 +62,8 @@ const HEADER_TEXTS: Record<LanguageCode, {
     refresh: 'နှုန်းထားများ အပ်ဒိတ်လုပ်ရန်',
     switchToDark: 'မှောင်သောမုဒ်သို့ ပြောင်းရန်',
     switchToLight: 'လင်းသောမုဒ်သို့ ပြောင်းရန်',
+    languageScope: 'ဝဘ်/ဆောင်းပါး ဘာသာ',
+    languageHelp: 'ဝဘ်ဆိုက်နှင့် ဆောင်းပါးဘာသာစကား ပြောင်းရန်',
     logoSub: 'ငွေလဲနှုန်းများနှင့် ငွေလွှဲဆိုင်ရာ အကြံပြုချက်များ',
   },
   km: {
@@ -62,6 +72,8 @@ const HEADER_TEXTS: Record<LanguageCode, {
     refresh: 'ធ្វើបច្ចុប្បន្នភាពអត្រា',
     switchToDark: 'ប្តូរទៅរបៀបងងឹត',
     switchToLight: 'ប្តូរទៅរបៀបភ្លឺ',
+    languageScope: 'ភាសាគេហទំព័រ/អត្ថបទ',
+    languageHelp: 'ប្តូរភាសាគេហទំព័រ និងអត្ថបទ',
     logoSub: 'អត្រាប្តូរប្រាក់ និងគន្លឹះផ្ទេរប្រាក់',
   },
 }
@@ -199,12 +211,13 @@ export function Header({ lang, subtitle }: HeaderProps) {
         </button>
 
         <label className={pageStyles.languageSelectWrap}>
-          <span className={pageStyles.visuallyHidden}>Language</span>
+          <span className={pageStyles.languageSelectLabel}>{hText.languageScope}</span>
           <select
             className={pageStyles.languageSelect}
             value={lang}
             onChange={e => changeLanguage(e.target.value)}
-            aria-label="Language"
+            aria-label={hText.languageHelp}
+            title={hText.languageHelp}
           >
             {LANGUAGE_OPTIONS.map(item => (
               <option key={item.code} value={item.code}>
