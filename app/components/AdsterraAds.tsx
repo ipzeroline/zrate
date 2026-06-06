@@ -174,7 +174,7 @@ function BannerAd({ size }: { size: BannerSize }) {
     // Prevent double-loading: if elements are already appended, do nothing
     if (slot.firstChild) return
 
-    const atOptions = {
+    window.atOptions = {
       key: banner.key,
       format: 'iframe',
       height: banner.height,
@@ -182,17 +182,12 @@ function BannerAd({ size }: { size: BannerSize }) {
       params: {},
     }
 
-    const confScript = document.createElement('script')
-    confScript.type = 'text/javascript'
-    confScript.innerHTML = `atOptions = ${JSON.stringify(atOptions)};`
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.src = `https://www.highperformanceformat.com/${banner.key}/invoke.js`
+    script.async = true
 
-    const invokeScript = document.createElement('script')
-    invokeScript.type = 'text/javascript'
-    invokeScript.src = `https://www.highperformanceformat.com/${banner.key}/invoke.js`
-    invokeScript.async = true
-
-    slot.appendChild(confScript)
-    slot.appendChild(invokeScript)
+    slot.appendChild(script)
   }, [banner.height, banner.key, banner.width, inView, isClosed])
 
   if (isClosed) return null
