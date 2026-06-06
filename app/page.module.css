@@ -277,9 +277,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    linear-gradient(90deg, transparent 0 24%, oklch(1 0 0 / 0.045) 24% 24.15%, transparent 24.15% 58%, oklch(1 0 0 / 0.035) 58% 58.15%, transparent 58.15%),
-    linear-gradient(180deg, oklch(1 0 0 / 0.06), transparent 42%);
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.06), transparent 42%);
   pointer-events: none;
 }
 
@@ -1496,4 +1494,3 @@
   background: var(--bg-elevated);
   color: var(--ink);
 }
-
