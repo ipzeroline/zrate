@@ -58,6 +58,71 @@ function useInView<T extends HTMLElement>() {
   return { ref, inView }
 }
 
+function useAdScrollRestorer() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const isMobileDevice = !window.matchMedia('(min-width: 900px)').matches
+    if (!isMobileDevice) return
+
+    const handleBodyMutations = () => {
+      // 1. Prevent scripts from locking overflow/position on html & body
+      if (document.body.style.overflow === 'hidden' || document.body.style.position === 'fixed') {
+        document.body.style.setProperty('overflow', 'auto', 'important')
+        document.body.style.setProperty('position', 'static', 'important')
+      }
+      if (document.documentElement.style.overflow === 'hidden') {
+        document.documentElement.style.setProperty('overflow', 'auto', 'important')
+      }
+
+      // 2. Scan and disable transparent click-intercepting overlays injected by ad networks
+      const elements = document.body.children
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i] as HTMLElement
+        if (!el || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue
+
+        // Skip main application layout wrapper
+        if (el.className && typeof el.className === 'string' && el.className.includes('main')) continue
+
+        const style = window.getComputedStyle(el)
+        const isFixed = style.position === 'fixed' || style.position === 'absolute'
+        
+        const isFullScreen = 
+          (parseFloat(style.width) >= window.innerWidth * 0.9 || style.width.includes('100%')) &&
+          (parseFloat(style.height) >= window.innerHeight * 0.9 || style.height.includes('100%'))
+        
+        if (isFixed && isFullScreen) {
+          const zIndex = parseInt(style.zIndex, 10)
+          if (zIndex > 100) {
+            // Neutralize if it is textless, covers screen, and is high z-index (invisible popup banner overlay)
+            if (!el.innerText.trim() && el.querySelector('iframe') === null) {
+              el.style.setProperty('pointer-events', 'none', 'important')
+              el.style.setProperty('display', 'none', 'important')
+            }
+          }
+        }
+      }
+    }
+
+    handleBodyMutations()
+
+    const observer = new MutationObserver(handleBodyMutations)
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] })
+
+    const handleTouchMove = () => {
+      if (document.body.style.overflow === 'hidden') {
+        document.body.style.setProperty('overflow', 'auto', 'important')
+      }
+    }
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('touchmove', handleTouchMove)
+    }
+  }, [])
+}
+
 function BannerAd({ size }: { size: BannerSize }) {
   const [isClosed, setIsClosed] = useState(false)
   const slotRef = useRef<HTMLDivElement>(null)
@@ -112,6 +177,7 @@ function BannerAd({ size }: { size: BannerSize }) {
 }
 
 export function ResponsiveBannerAd() {
+  useAdScrollRestorer()
   const [size, setSize] = useState<BannerSize | null>(null)
 
   useEffect(() => {
@@ -138,6 +204,7 @@ export function ResponsiveBannerAd() {
 }
 
 export function NativeBannerAd() {
+  useAdScrollRestorer()
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   const [isClosed, setIsClosed] = useState(false)
   const shellRef = useRef<HTMLDivElement>(null)
