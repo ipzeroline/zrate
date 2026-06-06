@@ -58,6 +58,19 @@ function useInView<T extends HTMLElement>() {
   return { ref, inView }
 }
 
+function useScreenSize() {
+  const [size, setSize] = useState<BannerSize | null>(null)
+
+  useEffect(() => {
+    const check = () => setSize(window.innerWidth >= 900 ? 'desktop' : 'mobile')
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  return size
+}
+
 function useAdScrollRestorer() {
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -181,16 +194,7 @@ function BannerAd({ size }: { size: BannerSize }) {
 
 export function ResponsiveBannerAd() {
   useAdScrollRestorer()
-  const [size, setSize] = useState<BannerSize | null>(null)
-
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 900px)')
-    const syncSize = () => setSize(media.matches ? 'desktop' : 'mobile')
-
-    syncSize()
-    media.addEventListener('change', syncSize)
-    return () => media.removeEventListener('change', syncSize)
-  }, [])
+  const size = useScreenSize()
 
   if (!size) {
     return (
@@ -208,19 +212,11 @@ export function ResponsiveBannerAd() {
 
 export function NativeBannerAd() {
   useAdScrollRestorer()
-  const [isDesktop, setIsDesktop] = useState(false)
+  const screenSize = useScreenSize()
+  const isDesktop = screenSize === 'desktop'
   const [isClosed, setIsClosed] = useState(false)
   const [scriptLoaded, setScriptLoaded] = useState(false)
   const shellRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 900px)')
-    const syncSize = () => setIsDesktop(media.matches)
-
-    syncSize()
-    media.addEventListener('change', syncSize)
-    return () => media.removeEventListener('change', syncSize)
-  }, [])
 
   useEffect(() => {
     if (!isDesktop) return
