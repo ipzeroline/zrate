@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { Footer } from '../../../components/Footer'
 import { SeoNav } from '../../../components/SeoNav'
 import { Header } from '../../../components/Header'
 import { AdSection } from '../../../components/AdsterraAds'
 import { BLOG_ARTICLES } from '../../../../lib/blogArticles'
+import { getAbsoluteBlogImageUrl, getBlogImagePath } from '../../../../lib/blogImage'
+import { BlogViewCounter } from './BlogViewCounter'
 import styles from '../blog.module.css'
 
 type LanguageCode = 'th' | 'en' | 'lo' | 'my' | 'km'
@@ -97,6 +98,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!trans) return {}
 
   const prefix = lang === 'th' ? '' : `/${lang}`
+  const imageUrl = getAbsoluteBlogImageUrl(article, lang, SITE_URL)
 
   const langAlternates: Record<string, string> = {}
   LOCALES.forEach(loc => {
@@ -127,13 +129,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       alternateLocale: LOCALES.filter(l => l !== lang).map(l =>
         l === 'th' ? 'th_TH' : l === 'en' ? 'en_US' : l === 'lo' ? 'lo_LA' : l === 'my' ? 'my_MM' : 'km_KH'
       ),
-      images: [{ url: article.image, width: 1024, height: 1024, alt: trans.title }],
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: trans.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: trans.ogTitle,
       description: trans.ogDescription,
-      images: [article.image],
+      images: [imageUrl],
     },
     category: 'finance',
   }
@@ -177,6 +179,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
   const prefix = lang === 'th' ? '' : `/${lang}`
   const articleHtml = parseMarkdownToHtml(trans.content)
+  const imagePath = getBlogImagePath(article, lang)
+  const imageUrl = getAbsoluteBlogImageUrl(article, lang, SITE_URL)
 
   // Structured Data
   const breadcrumbJsonLd = {
@@ -207,7 +211,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
     'mainEntityOfPage': { '@type': 'WebPage', '@id': `${SITE_URL}${prefix}/blog/${resolvedParams.slug}` },
     'headline': trans.title,
     'description': trans.metaDescription,
-    'image': article.image,
+    'image': imageUrl,
     'datePublished': article.publishedAt,
     'dateModified': article.modifiedAt,
     'author': { '@type': 'Organization', 'name': article.author, 'url': SITE_URL },
@@ -257,6 +261,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
               <span className={styles.author}>{article.author}</span>
               <span className={styles.metaDot}>•</span>
               <span>{formatDate(article.publishedAt, lang)}</span>
+              <span className={styles.metaDot}>•</span>
+              <BlogViewCounter slug={resolvedParams.slug} lang={lang} />
               {article.modifiedAt !== article.publishedAt && (
                 <>
                   <span className={styles.metaDot}>•</span>
@@ -271,13 +277,12 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
           {/* Cover Image */}
           <div className={styles.articleCover}>
-            <Image
-              src={article.image}
+            <img
+              src={imagePath}
               alt={trans.title}
               width={800}
-              height={450}
+              height={420}
               className={styles.coverImage}
-              priority
             />
           </div>
 

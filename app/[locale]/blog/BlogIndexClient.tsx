@@ -5,6 +5,7 @@ import Link from 'next/link'
 import styles from './blog.module.css'
 import { SeoNav } from '../../components/SeoNav'
 import { Header } from '../../components/Header'
+import { getBlogImagePath } from '../../../lib/blogImage'
 
 export interface ArticleItem {
   slug: string
@@ -213,9 +214,25 @@ function formatDate(dateStr: string, locale: string): string {
   })
 }
 
+function formatViews(value: number, locale: string): string {
+  const localeMap: Record<string, string> = {
+    th: 'th-TH', en: 'en-US', lo: 'lo-LA', my: 'my-MM', km: 'km-KH'
+  }
+  return new Intl.NumberFormat(localeMap[locale] || 'en-US').format(value)
+}
+
+function viewsLabel(lang: string) {
+  if (lang === 'th') return 'คนอ่าน'
+  if (lang === 'lo') return 'ຄົນອ່ານ'
+  if (lang === 'my') return 'ဖတ်ရှုသူ'
+  if (lang === 'km') return 'អ្នកអាន'
+  return 'reads'
+}
+
 export function BlogIndexClient({ articles, lang, prefix, text }: BlogIndexClientProps) {
   const [query, setQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({})
   const isTh = lang === 'th'
 
   const normalizedQuery = query.trim().toLowerCase()
@@ -246,6 +263,30 @@ export function BlogIndexClient({ articles, lang, prefix, text }: BlogIndexClien
 
   const activeQueries = POPULAR_QUERIES[lang] || POPULAR_QUERIES.th
   const activeClusters = GUIDE_CLUSTERS[lang] || GUIDE_CLUSTERS.th
+
+  useEffect(() => {
+    const slugs = paginatedArticles.map((article) => article.slug)
+    if (slugs.length === 0) return
+
+    let cancelled = false
+
+    fetch(`/api/blog-views?slugs=${encodeURIComponent(slugs.join(','))}`, { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((data: { views?: Record<string, number> }) => {
+        if (!cancelled && data.views) {
+          setViewCounts((current) => ({ ...current, ...data.views }))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setViewCounts((current) => ({ ...current }))
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [paginatedArticles])
 
   return (
     <>
@@ -394,8 +435,7 @@ export function BlogIndexClient({ articles, lang, prefix, text }: BlogIndexClien
           <div className={styles.articlesGrid}>
             {paginatedArticles.map((article) => {
               const readTime = estimateReadTime(article.translation.content)
-              // Dynamically load our new high-quality OpenGraph graphic
-              const imageSrc = `/api/blog-image/${article.slug}?lang=${lang}`
+              const imageSrc = getBlogImagePath(article, lang)
 
               return (
                 <article className={styles.articleCard} key={article.slug}>
@@ -407,7 +447,6 @@ export function BlogIndexClient({ articles, lang, prefix, text }: BlogIndexClien
                       className={styles.cardImage}
                     />
                     <div className={styles.cardImageOverlay} />
-                    <span className={styles.categoryTag}>{article.category}</span>
                   </Link>
 
                   <div className={styles.articleCardContent}>
@@ -424,6 +463,13 @@ export function BlogIndexClient({ articles, lang, prefix, text }: BlogIndexClien
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         {readTime} {text.minRead}
+                      </span>
+                      <span className={styles.infoBadge}>
+                        <svg className={styles.infoBadgeIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {formatViews(viewCounts[article.slug] || 0, lang)} {viewsLabel(lang)}
                       </span>
                     </div>
 
@@ -465,6 +511,8 @@ export function BlogIndexClient({ articles, lang, prefix, text }: BlogIndexClien
                       </div>
                       <div className={styles.metaRight}>
                         <span>{formatDate(article.publishedAt, lang)}</span>
+                        <span className={styles.metaDivider} />
+                        <span>{formatViews(viewCounts[article.slug] || 0, lang)} {viewsLabel(lang)}</span>
                       </div>
                     </div>
                   </div>
