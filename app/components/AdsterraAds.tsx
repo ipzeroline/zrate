@@ -17,11 +17,11 @@ declare global {
 
 const NATIVE_KEY = '55839f2c5b4e3fb35184faac274e5138'
 const DESKTOP_BANNER_KEY = '109f0016d0d3b1b39fd92ba8ea69e764'
-const MOBILE_RECTANGLE_BANNER_KEY = '109f0016d0d3b1b39fd92ba8ea69e764'
+const MOBILE_BANNER_KEY = '8698763d9b806ab84826aebdd09784e7'
 
 const BANNER_SIZES = {
   desktop: { width: 728, height: 90, key: DESKTOP_BANNER_KEY },
-  mobile: { width: 300, height: 250, key: MOBILE_RECTANGLE_BANNER_KEY },
+  mobile: { width: 320, height: 50, key: MOBILE_BANNER_KEY },
 } as const
 
 type BannerSize = keyof typeof BANNER_SIZES
@@ -205,7 +205,7 @@ function BannerAd({ size }: { size: BannerSize }) {
           ปิด ×
         </button>
       </div>
-      <div className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`} style={{ minHeight: banner.height }} aria-label="Advertisement">
+      <div className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileBanner}`} style={{ minHeight: banner.height }} aria-label="Advertisement">
         <div
           ref={slotRef}
           id={`adsterra-banner-${banner.width}x${banner.height}-${instanceId.replace(/:/g, '')}`}

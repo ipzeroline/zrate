@@ -70,12 +70,12 @@
   min-height: 90px;
 }
 
-.mobileRectangleBanner {
-  min-height: 250px;
+.mobileBanner {
+  min-height: 50px;
 }
 
 .pendingBanner {
-  min-height: 250px;
+  min-height: 50px;
 }
 
 .nativeShell {
