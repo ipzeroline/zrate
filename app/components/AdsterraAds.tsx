@@ -62,8 +62,39 @@ function useAdScrollRestorer() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    // --- Redirect Blocker Logic ---
+    let isUserNavigating = false
+    const handleNavigationClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement
+      if (target && (target.closest('a') || target.closest('button') || target.closest('form') || target.closest('[role="button"]'))) {
+        isUserNavigating = true
+        // Allow navigation within 1.5s of click/tap
+        setTimeout(() => { isUserNavigating = false }, 1500)
+      }
+    }
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isUserNavigating) {
+        // Prevent top-level redirect by malicious scripts
+        e.preventDefault()
+        e.returnValue = ''
+        return ''
+      }
+    }
+
+    window.addEventListener('click', handleNavigationClick, true)
+    window.addEventListener('touchend', handleNavigationClick, true)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // --- Existing Scroll Restorer Logic ---
     const isMobileDevice = !window.matchMedia('(min-width: 900px)').matches
-    if (!isMobileDevice) return
+    if (!isMobileDevice) {
+      return () => {
+        window.removeEventListener('click', handleNavigationClick, true)
+        window.removeEventListener('touchend', handleNavigationClick, true)
+        window.removeEventListener('beforeunload', handleBeforeUnload)
+      }
+    }
 
     const handleBodyMutations = () => {
       // 1. Prevent scripts from locking overflow/position on html & body
@@ -117,6 +148,9 @@ function useAdScrollRestorer() {
     window.addEventListener('touchmove', handleTouchMove, { passive: true })
 
     return () => {
+      window.removeEventListener('click', handleNavigationClick, true)
+      window.removeEventListener('touchend', handleNavigationClick, true)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
       observer.disconnect()
       window.removeEventListener('touchmove', handleTouchMove)
     }
@@ -125,8 +159,41 @@ function useAdScrollRestorer() {
 
 function BannerAd({ size }: { size: BannerSize }) {
   const [isClosed, setIsClosed] = useState(false)
+  const slotRef = useRef<HTMLDivElement>(null)
+  const instanceId = useId()
   const banner = BANNER_SIZES[size]
   const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
+
+  useEffect(() => {
+    if (isClosed) return
+    if (!inView) return
+
+    const slot = slotRef.current
+    if (!slot) return
+
+    // Prevent double-loading: if elements are already appended, do nothing
+    if (slot.firstChild) return
+
+    const atOptions = {
+      key: banner.key,
+      format: 'iframe',
+      height: banner.height,
+      width: banner.width,
+      params: {},
+    }
+
+    const confScript = document.createElement('script')
+    confScript.type = 'text/javascript'
+    confScript.innerHTML = `atOptions = ${JSON.stringify(atOptions)};`
+
+    const invokeScript = document.createElement('script')
+    invokeScript.type = 'text/javascript'
+    invokeScript.src = `https://www.highperformanceformat.com/${banner.key}/invoke.js`
+    invokeScript.async = true
+
+    slot.appendChild(confScript)
+    slot.appendChild(invokeScript)
+  }, [banner.height, banner.key, banner.width, inView, isClosed])
 
   if (isClosed) return null
 
@@ -139,18 +206,12 @@ function BannerAd({ size }: { size: BannerSize }) {
         </button>
       </div>
       <div className={`${styles.adShell} ${size === 'desktop' ? styles.desktopBanner : styles.mobileRectangleBanner}`} style={{ minHeight: banner.height }} aria-label="Advertisement">
-        {inView ? (
-          <iframe
-            src={`/api/ad-iframe?key=${banner.key}&width=${banner.width}&height=${banner.height}`}
-            width={banner.width}
-            height={banner.height}
-            style={{ border: 'none', overflow: 'hidden', display: 'block', margin: '0 auto' }}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-            scrolling="no"
-          />
-        ) : (
-          <div style={{ width: banner.width, height: banner.height }} />
-        )}
+        <div
+          ref={slotRef}
+          id={`adsterra-banner-${banner.width}x${banner.height}-${instanceId.replace(/:/g, '')}`}
+          className={styles.bannerSlot}
+          style={{ width: banner.width, minHeight: banner.height }}
+        />
       </div>
     </div>
   )
@@ -187,6 +248,7 @@ export function NativeBannerAd() {
   useAdScrollRestorer()
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   const [isClosed, setIsClosed] = useState(false)
+  const shellRef = useRef<HTMLDivElement>(null)
   const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
@@ -198,11 +260,27 @@ export function NativeBannerAd() {
     return () => media.removeEventListener('change', syncSize)
   }, [])
 
+  useEffect(() => {
+    if (isDesktop !== true) return
+    if (isClosed) return
+    if (!inView) return
+
+    const shell = shellRef.current
+    if (!shell) return
+
+    // Prevent double injection
+    if (shell.querySelector('script')) return
+
+    const script = createScript(`https://pl29644580.effectivecpmnetwork.com/${NATIVE_KEY}/invoke.js`)
+    script.dataset.cfasync = 'false'
+    shell.insertBefore(script, shell.firstChild)
+  }, [inView, isClosed, isDesktop])
+
   if (isDesktop === null) {
     return (
       <div className={`${styles.adContainer} ${styles.desktopOnly}`}>
         <div className={styles.adHeader}>
-          <span className={styles.adLabel}>โฆษณา / Advertisement</span>
+          <span className={styles.adLabel}>โฆณา / Advertisement</span>
         </div>
         <div className={`${styles.adShell} ${styles.nativeShell} ${styles.pendingBanner}`} aria-hidden="true" />
       </div>
@@ -215,24 +293,15 @@ export function NativeBannerAd() {
   return (
     <div ref={loaderRef} className={`${styles.adContainer} ${styles.desktopOnly}`}>
       <div className={styles.adHeader}>
-        <span className={styles.adLabel}>โฆษณา / Advertisement</span>
+        <span className={styles.adLabel}>โฆณา / Advertisement</span>
         <button className={styles.closeButton} onClick={() => setIsClosed(true)} aria-label="Close advertisement">
           ปิด ×
         </button>
       </div>
       <div className={`${styles.adShell} ${styles.nativeShell}`} style={{ minHeight: 140 }} aria-label="Advertisement">
-        {inView ? (
-          <iframe
-            src={`/api/ad-iframe?key=${NATIVE_KEY}&type=native`}
-            width="100%"
-            height="140"
-            style={{ border: 'none', overflow: 'hidden', display: 'block' }}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-            scrolling="no"
-          />
-        ) : (
-          <div style={{ height: 140 }} />
-        )}
+        <div ref={shellRef}>
+          <div id={`container-${NATIVE_KEY}`} className={styles.nativeSlot} />
+        </div>
       </div>
     </div>
   )
