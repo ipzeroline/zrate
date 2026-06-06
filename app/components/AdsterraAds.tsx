@@ -62,39 +62,9 @@ function useAdScrollRestorer() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // --- Redirect Blocker Logic ---
-    let isUserNavigating = false
-    const handleNavigationClick = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as HTMLElement
-      if (target && (target.closest('a') || target.closest('button') || target.closest('form') || target.closest('[role="button"]'))) {
-        isUserNavigating = true
-        // Allow navigation within 1.5s of click/tap
-        setTimeout(() => { isUserNavigating = false }, 1500)
-      }
-    }
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!isUserNavigating) {
-        // Prevent top-level redirect by malicious scripts
-        e.preventDefault()
-        e.returnValue = ''
-        return ''
-      }
-    }
-
-    window.addEventListener('click', handleNavigationClick, true)
-    window.addEventListener('touchend', handleNavigationClick, true)
-    window.addEventListener('beforeunload', handleBeforeUnload)
-
-    // --- Existing Scroll Restorer Logic ---
+    // --- Mobile Overlay & Popup Blocker ---
     const isMobileDevice = !window.matchMedia('(min-width: 900px)').matches
-    if (!isMobileDevice) {
-      return () => {
-        window.removeEventListener('click', handleNavigationClick, true)
-        window.removeEventListener('touchend', handleNavigationClick, true)
-        window.removeEventListener('beforeunload', handleBeforeUnload)
-      }
-    }
+    if (!isMobileDevice) return
 
     const handleBodyMutations = () => {
       // 1. Prevent scripts from locking overflow/position on html & body
@@ -117,11 +87,11 @@ function useAdScrollRestorer() {
 
         const style = window.getComputedStyle(el)
         const isFixed = style.position === 'fixed' || style.position === 'absolute'
-        
-        const isFullScreen = 
+
+        const isFullScreen =
           (parseFloat(style.width) >= window.innerWidth * 0.9 || style.width.includes('100%')) &&
           (parseFloat(style.height) >= window.innerHeight * 0.9 || style.height.includes('100%'))
-        
+
         if (isFixed && isFullScreen) {
           const zIndex = parseInt(style.zIndex, 10)
           if (zIndex > 100) {
@@ -148,9 +118,6 @@ function useAdScrollRestorer() {
     window.addEventListener('touchmove', handleTouchMove, { passive: true })
 
     return () => {
-      window.removeEventListener('click', handleNavigationClick, true)
-      window.removeEventListener('touchend', handleNavigationClick, true)
-      window.removeEventListener('beforeunload', handleBeforeUnload)
       observer.disconnect()
       window.removeEventListener('touchmove', handleTouchMove)
     }
@@ -241,10 +208,10 @@ export function ResponsiveBannerAd() {
 
 export function NativeBannerAd() {
   useAdScrollRestorer()
-  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
+  const [isDesktop, setIsDesktop] = useState(false)
   const [isClosed, setIsClosed] = useState(false)
+  const [scriptLoaded, setScriptLoaded] = useState(false)
   const shellRef = useRef<HTMLDivElement>(null)
-  const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
@@ -256,9 +223,9 @@ export function NativeBannerAd() {
   }, [])
 
   useEffect(() => {
-    if (isDesktop !== true) return
+    if (!isDesktop) return
     if (isClosed) return
-    if (!inView) return
+    if (scriptLoaded) return
 
     const shell = shellRef.current
     if (!shell) return
@@ -266,29 +233,20 @@ export function NativeBannerAd() {
     // Prevent double injection
     if (shell.querySelector('script')) return
 
+    setScriptLoaded(true)
+
     const script = createScript(`https://pl29644580.effectivecpmnetwork.com/${NATIVE_KEY}/invoke.js`)
     script.dataset.cfasync = 'false'
     shell.insertBefore(script, shell.firstChild)
-  }, [inView, isClosed, isDesktop])
-
-  if (isDesktop === null) {
-    return (
-      <div className={`${styles.adContainer} ${styles.desktopOnly}`}>
-        <div className={styles.adHeader}>
-          <span className={styles.adLabel}>โฆณา / Advertisement</span>
-        </div>
-        <div className={`${styles.adShell} ${styles.nativeShell} ${styles.pendingBanner}`} aria-hidden="true" />
-      </div>
-    )
-  }
+  }, [isDesktop, isClosed, scriptLoaded])
 
   if (!isDesktop) return null
   if (isClosed) return null
 
   return (
-    <div ref={loaderRef} className={`${styles.adContainer} ${styles.desktopOnly}`}>
+    <div className={`${styles.adContainer} ${styles.desktopOnly}`}>
       <div className={styles.adHeader}>
-        <span className={styles.adLabel}>โฆณา / Advertisement</span>
+        <span className={styles.adLabel}>โฆษณา / Advertisement</span>
         <button className={styles.closeButton} onClick={() => setIsClosed(true)} aria-label="Close advertisement">
           ปิด ×
         </button>
