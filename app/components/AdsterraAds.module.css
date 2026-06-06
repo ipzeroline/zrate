@@ -94,3 +94,13 @@
     min-height: 90px;
   }
 }
+
+.desktopOnly {
+  display: none !important;
+}
+
+@media (min-width: 900px) {
+  .desktopOnly {
+    display: flex !important;
+  }
+}

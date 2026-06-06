@@ -138,11 +138,22 @@ export function ResponsiveBannerAd() {
 }
 
 export function NativeBannerAd() {
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   const [isClosed, setIsClosed] = useState(false)
   const shellRef = useRef<HTMLDivElement>(null)
   const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
+    const media = window.matchMedia('(min-width: 900px)')
+    const syncSize = () => setIsDesktop(media.matches)
+
+    syncSize()
+    media.addEventListener('change', syncSize)
+    return () => media.removeEventListener('change', syncSize)
+  }, [])
+
+  useEffect(() => {
+    if (isDesktop !== true) return
     if (isClosed) return
     if (!inView) return
 
@@ -159,12 +170,24 @@ export function NativeBannerAd() {
     return () => {
       script.remove()
     }
-  }, [inView, isClosed])
+  }, [inView, isClosed, isDesktop])
 
+  if (isDesktop === null) {
+    return (
+      <div className={`${styles.adContainer} ${styles.desktopOnly}`}>
+        <div className={styles.adHeader}>
+          <span className={styles.adLabel}>โฆษณา / Advertisement</span>
+        </div>
+        <div className={`${styles.adShell} ${styles.nativeShell} ${styles.pendingBanner}`} aria-hidden="true" />
+      </div>
+    )
+  }
+
+  if (!isDesktop) return null
   if (isClosed) return null
 
   return (
-    <div ref={loaderRef} className={styles.adContainer}>
+    <div ref={loaderRef} className={`${styles.adContainer} ${styles.desktopOnly}`}>
       <div className={styles.adHeader}>
         <span className={styles.adLabel}>โฆษณา / Advertisement</span>
         <button className={styles.closeButton} onClick={() => setIsClosed(true)} aria-label="Close advertisement">
