@@ -100,27 +100,42 @@ function BannerAd({ size }: { size: BannerSize }) {
 }
 
 export function ResponsiveBannerAd() {
-  const [size, setSize] = useState<BannerSize | null>(null)
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 900px)')
-    const syncSize = () => setSize(media.matches ? 'desktop' : 'mobile')
+    const syncSize = () => setIsDesktop(media.matches)
 
     syncSize()
     media.addEventListener('change', syncSize)
     return () => media.removeEventListener('change', syncSize)
   }, [])
 
-  if (!size) return <div className={`${styles.adShell} ${styles.pendingBanner}`} aria-hidden="true" />
+  if (isDesktop === null) {
+    return <div className={`${styles.adShell} ${styles.pendingBanner}`} aria-hidden="true" />
+  }
 
-  return <BannerAd key={size} size={size} />
+  if (!isDesktop) return null
+
+  return <BannerAd key="desktop" size="desktop" />
 }
 
 export function NativeBannerAd() {
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   const shellRef = useRef<HTMLDivElement>(null)
   const { ref: loaderRef, inView } = useInView<HTMLDivElement>()
 
   useEffect(() => {
+    const media = window.matchMedia('(min-width: 900px)')
+    const syncSize = () => setIsDesktop(media.matches)
+
+    syncSize()
+    media.addEventListener('change', syncSize)
+    return () => media.removeEventListener('change', syncSize)
+  }, [])
+
+  useEffect(() => {
+    if (isDesktop !== true) return
     if (!inView) return
 
     const shell = shellRef.current
@@ -136,12 +151,18 @@ export function NativeBannerAd() {
     return () => {
       script.remove()
     }
-  }, [inView])
+  }, [inView, isDesktop])
+
+  if (isDesktop === null) {
+    return <div className={`${styles.adShell} ${styles.nativeShell} ${styles.pendingBanner}`} aria-hidden="true" />
+  }
+
+  if (!isDesktop) return null
 
   return (
     <div ref={loaderRef} className={`${styles.adShell} ${styles.nativeShell}`} aria-label="Advertisement">
       <div ref={shellRef}>
-      <div id={`container-${NATIVE_KEY}`} className={styles.nativeSlot} />
+        <div id={`container-${NATIVE_KEY}`} className={styles.nativeSlot} />
       </div>
     </div>
   )

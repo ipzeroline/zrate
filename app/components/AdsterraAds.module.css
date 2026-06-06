@@ -1,9 +1,15 @@
 .adShell {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  margin: 20px auto;
-  overflow: hidden;
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .adShell {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 20px auto;
+    overflow: hidden;
+  }
 }
 
 .bannerSlot,
