@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { fetchHistoricalRates } from '../../../lib/ratesService'
 
+export const revalidate = 3600
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const base = searchParams.get('base') || 'USD'

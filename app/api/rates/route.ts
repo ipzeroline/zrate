@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { fetchRates } from '../../../lib/ratesService'
 
+export const revalidate = 120
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const base = searchParams.get('base') || 'USD'

@@ -486,12 +486,13 @@ export default function HomeClient({
 
   useEffect(() => {
     let active = true
+    const controller = new AbortController()
     const loadChartData = async () => {
       setChartLoading(true)
       try {
         const [histRes, newsRes] = await Promise.all([
-          fetch(`/api/history?base=${activeChartBase}&quote=${activeChartQuote}&days=365`),
-          fetch(`/api/news?base=${activeChartBase}&quote=${activeChartQuote}`)
+          fetch(`/api/history?base=${activeChartBase}&quote=${activeChartQuote}&days=365`, { signal: controller.signal }),
+          fetch(`/api/news?base=${activeChartBase}&quote=${activeChartQuote}`, { signal: controller.signal })
         ])
         if (!active) return
         if (histRes.ok) {
@@ -503,7 +504,9 @@ export default function HomeClient({
           setChartNews(newsData)
         }
       } catch (err) {
-        console.error('Failed to load dynamic chart data:', err)
+        if (!controller.signal.aborted) {
+          console.error('Failed to load dynamic chart data:', err)
+        }
       } finally {
         if (active) setChartLoading(false)
       }
@@ -518,6 +521,7 @@ export default function HomeClient({
 
     return () => {
       active = false
+      controller.abort()
     }
   }, [activeChartBase, activeChartQuote, chartBase, chartQuote, history, news])
 
@@ -554,17 +558,18 @@ export default function HomeClient({
     setTheme(next)
   }, [theme])
 
-  const fetchRates = useCallback(async () => {
+  const fetchRates = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     setError('')
     try {
       // Use internal /api/rates with server-side caching + CDN cache
-      const res = await fetch(`/api/rates?base=${baseCurrency}`)
+      const res = await fetch(`/api/rates?base=${baseCurrency}`, signal ? { signal } : undefined)
       if (!res.ok) throw new Error('Network error')
       const data = await res.json()
       setRates(data.rates)
       setLastUpdated(new Date(data.timestamp))
-    } catch {
+    } catch (err) {
+      if (signal?.aborted) return
       setError(UI_TEXT[language].error)
       // fallback mock rates
       const mock: Rates = {
@@ -580,18 +585,42 @@ export default function HomeClient({
       Object.entries(mock).forEach(([k, v]) => { converted[k] = v / base })
       setRates(converted)
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) {
+        setLoading(false)
+      }
     }
   }, [baseCurrency, language])
 
-  // Sync rates on mount if initialRates was empty, and set up interval
+  const hasRates = Object.keys(rates).length > 0
+
+  // Sync rates while the tab is active. Hidden tabs should not keep waking the server.
   useEffect(() => {
-    if (Object.keys(rates).length === 0) {
-      fetchRates()
+    const controller = new AbortController()
+
+    if (!hasRates) {
+      fetchRates(controller.signal)
     }
-    const interval = setInterval(fetchRates, 120000) // poll every 2 min
-    return () => clearInterval(interval)
-  }, [fetchRates, rates])
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchRates(controller.signal)
+      }
+    }, 120000) // poll every 2 min only while visible
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchRates(controller.signal)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchRates, hasRates])
 
   const t = UI_TEXT[language] || UI_TEXT.th
   const content = LOCALIZED_CONTENT[language] || LOCALIZED_CONTENT.th
@@ -743,7 +772,7 @@ export default function HomeClient({
 
           <button
             className={styles.iconBtn}
-            onClick={fetchRates}
+            onClick={() => fetchRates()}
             disabled={loading}
             title={content.refreshRates}
             aria-label={content.refreshRates}

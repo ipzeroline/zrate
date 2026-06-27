@@ -491,17 +491,8 @@ function formatDate(date: Date, lang: LanguageCode) {
 
 // Server-side rates fetcher with cache revalidation
 async function fetchServerRates(base: string): Promise<{ rates: Record<string, number>; timestamp: Date }> {
-  const apiBase = base === 'USDT' ? 'USD' : base
   try {
-    const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${apiBase}`, {
-      next: { revalidate: 300 } // revalidate every 5 minutes
-    })
-    if (!res.ok) throw new Error('API failed')
-    const data = await res.json()
-    const rates = data.rates || {}
-    rates['USDT'] = rates['USD'] || 1
-    const ts = data.time_last_updated ? new Date(data.time_last_updated * 1000) : new Date()
-    return { rates, timestamp: ts }
+    return await fetchRates(base)
   } catch (err) {
     console.error('Failed server fetch, fallback to mock rates', err)
     const mock: Record<string, number> = { ...USD_RATES }

@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "06ad8432310ecc09bd6d81563ac9efabca4580e4",
+    "indexed_at": "2026-06-27T00:37:14Z",
+    "project": "Users-zeroline-Documents-zrate",
+    "nodes": 517,
+    "edges": 814,
+    "original_size": 1572864,
+    "compressed_size": 78992,
+    "compression_level": 9
+}

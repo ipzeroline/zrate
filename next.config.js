@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
   async headers() {
     return [
       {

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p 7878"
+    "start": "next start -p 7878",
+    "start:lean": "NODE_OPTIONS='--max-old-space-size=256' next start -p 7878"
   },
   "dependencies": {
     "next": "^16.2.7",

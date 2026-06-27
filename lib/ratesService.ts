@@ -1,6 +1,7 @@
 import { cached } from './cache'
 
 const EODHD_API_KEY = process.env.EODHD_API_KEY || ''
+const REQUEST_TIMEOUT_MS = Math.max(1_000, Number(process.env.RATES_FETCH_TIMEOUT_MS || 8_000))
 
 export interface RateResponse {
   rates: Record<string, number>
@@ -93,6 +94,21 @@ const FOREX_SYMBOLS = [
   'USDNGN.FOREX'
 ].join(',')
 
+async function fetchWithTimeout(url: string, init: RequestInit & { next?: { revalidate: number } } = {}) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  timeout.unref?.()
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: init.signal ?? controller.signal
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 /**
  * Fetch USD-based rates from EODHD.
  * Cached in-memory for 2 min to prevent multiple serverless calls.
@@ -100,7 +116,7 @@ const FOREX_SYMBOLS = [
  */
 async function fetchUsdRatesRaw(): Promise<{ rates: Record<string, number>; timestamp: Date }> {
   const url = `https://eodhd.com/api/real-time/${FOREX_SYMBOLS}?api_token=${EODHD_API_KEY}&fmt=json`
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     next: { revalidate: 120 } // Next.js fetch cache: 2 min
   })
 
@@ -199,7 +215,7 @@ async function fetchSingleCurrencyHistory(currency: string): Promise<Record<stri
 
   const url = `https://eodhd.com/api/eod/${symbol}?api_token=${EODHD_API_KEY}&fmt=json&from=${fromStr}&to=${toStr}&period=d`
   
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     next: { revalidate: 3600 } // cache for 1 hour to prevent API quota exhaustion
   })
   
@@ -309,7 +325,7 @@ export async function fetchCurrencyNews(base: string, quote: string): Promise<Ne
     return await cached(cacheKey, 1_800_000, async () => { // 30 min TTL
       const symbol = `${base}${quote}.FOREX`
       const url = `https://eodhd.com/api/news?s=${symbol}&limit=5&api_token=${EODHD_API_KEY}&fmt=json`
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         next: { revalidate: 3600 } // cache for 1 hour
       })
 
@@ -378,5 +394,4 @@ function generateMockNews(base: string, quote: string): NewsItem[] {
     }
   ]
 }
-
 

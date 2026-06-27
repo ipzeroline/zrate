@@ -8,13 +8,39 @@
 interface CacheEntry<T> {
   data: T
   expiresAt: number
+  lastAccessed: number
 }
+
+const MAX_ENTRIES = Math.max(16, Number(process.env.IN_MEMORY_CACHE_MAX_ENTRIES || 128))
 
 // Shared across all requests within the same serverless instance
 const store = new Map<string, CacheEntry<unknown>>()
 
 // Track in-flight promises to deduplicate concurrent fetches
 const inFlight = new Map<string, Promise<unknown>>()
+
+function prune(now: number) {
+  for (const [key, entry] of store) {
+    if (entry.expiresAt <= now) {
+      store.delete(key)
+    }
+  }
+
+  while (store.size > MAX_ENTRIES) {
+    let oldestKey: string | undefined
+    let oldestAccess = Infinity
+
+    for (const [key, entry] of store) {
+      if (entry.lastAccessed < oldestAccess) {
+        oldestKey = key
+        oldestAccess = entry.lastAccessed
+      }
+    }
+
+    if (!oldestKey) return
+    store.delete(oldestKey)
+  }
+}
 
 export async function cached<T>(
   key: string,
@@ -26,7 +52,11 @@ export async function cached<T>(
   // 1. Check if valid cached
   const entry = store.get(key) as CacheEntry<T> | undefined
   if (entry && entry.expiresAt > now) {
+    entry.lastAccessed = now
     return entry.data
+  }
+  if (entry) {
+    store.delete(key)
   }
 
   // 2. Deduplicate: if another request is already fetching this key, wait for it
@@ -38,7 +68,9 @@ export async function cached<T>(
   // 3. Fetch fresh data
   const promise = fetcher()
     .then(data => {
-      store.set(key, { data, expiresAt: now + ttlMs })
+      const refreshedAt = Date.now()
+      store.set(key, { data, expiresAt: refreshedAt + ttlMs, lastAccessed: refreshedAt })
+      prune(refreshedAt)
       inFlight.delete(key)
       return data
     })
